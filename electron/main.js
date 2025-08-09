@@ -1,9 +1,10 @@
-const { app, BrowserWindow, Menu, ipcMain } = require('electron');
+const { app, BrowserWindow, Menu, ipcMain, dialog } = require('electron');
 const path = require('path');
 const url = require('url');
 
 let mainWindow;
 let dbExplorerWindow;
+let settingsWindow;
 
 function createMenu() {
     const template = [
@@ -18,6 +19,16 @@ function createMenu() {
                             return;
                         }
                         createDbExplorerWindow();
+                    }
+                },
+                {
+                    label: 'Settings',
+                    click: () => {
+                        if (settingsWindow) {
+                            settingsWindow.focus();
+                            return;
+                        }
+                        createSettingsWindow();
                     }
                 },
                 { type: 'separator' },
@@ -77,6 +88,58 @@ function createDbExplorerWindow() {
         dbExplorerWindow = null;
     });
 }
+
+function createSettingsWindow() {
+    settingsWindow = new BrowserWindow({
+        width: 500,
+        height: 400,
+        webPreferences: {
+            preload: path.join(__dirname, 'preload.js'),
+            contextIsolation: true,
+            nodeIntegration: false,
+            sandbox: false,
+        },
+        parent: mainWindow,
+        modal: true,
+        title: 'Settings',
+        resizable: false
+    });
+
+    const devServerURL = process.env.VITE_DEV_SERVER_URL;
+    if (devServerURL) {
+        settingsWindow.loadURL(devServerURL + '?view=settings');
+    } else {
+        const indexHtml = url.pathToFileURL(path.join(__dirname, '..', 'dist', 'index.html')).toString() + '?view=settings';
+        settingsWindow.loadURL(indexHtml);
+    }
+
+    settingsWindow.on('closed', () => {
+        settingsWindow = null;
+    });
+}
+
+// IPC Handlers
+ipcMain.handle('select-folder', async () => {
+    const result = await dialog.showOpenDialog(mainWindow, {
+        properties: ['openDirectory'],
+        title: 'Select Media Files Folder'
+    });
+
+    if (!result.canceled && result.filePaths.length > 0) {
+        return result.filePaths[0];
+    }
+    return null;
+});
+
+ipcMain.handle('validate-path', async (event, folderPath) => {
+    const fs = require('fs');
+    try {
+        const stats = await fs.promises.stat(folderPath);
+        return stats.isDirectory();
+    } catch {
+        return false;
+    }
+});
 
 function createWindow() {
     mainWindow = new BrowserWindow({

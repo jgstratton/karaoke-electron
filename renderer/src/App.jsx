@@ -1,22 +1,28 @@
 import React, { useEffect, useState } from 'react'
 import PouchDB from 'pouchdb-browser'
 import DatabaseExplorer from './DatabaseExplorer.jsx'
+import Settings from './Settings.jsx'
 import './styles.css'
 
 const db = new PouchDB('karaoke-db')
 
 export default function App() {
-    // Check if we should show the database explorer
+    // Check which view to show based on URL params
     const urlParams = new URLSearchParams(window.location.search)
-    const isDbExplorer = urlParams.get('view') === 'dbexplorer'
+    const view = urlParams.get('view')
 
-    if (isDbExplorer) {
+    if (view === 'dbexplorer') {
         return <DatabaseExplorer />
+    }
+
+    if (view === 'settings') {
+        return <Settings />
     }
 
     const [name, setName] = useState('...')
     const [input, setInput] = useState('')
     const [saving, setSaving] = useState(false)
+    const [mediaPath, setMediaPath] = useState('')
 
     useEffect(() => {
         let cancelled = false
@@ -44,6 +50,16 @@ export default function App() {
                         setInput('World')
                     }
                 }
+            }
+
+            // Load media path from settings
+            try {
+                const settingsDoc = await db.get('settings')
+                if (!cancelled && settingsDoc.mediaPath) {
+                    setMediaPath(settingsDoc.mediaPath)
+                }
+            } catch (err) {
+                // Settings don't exist yet, that's fine
             }
         }
 
@@ -85,8 +101,25 @@ export default function App() {
                     <button onClick={save} disabled={saving}>{saving ? 'Saving…' : 'Save'}</button>
                 </div>
 
+                {/* Display current media path if set */}
+                {mediaPath && (
+                    <div style={{
+                        marginTop: 16,
+                        padding: 12,
+                        background: '#1a1f2e',
+                        border: '1px solid #2a2f3a',
+                        borderRadius: 6
+                    }}>
+                        <p className="hint" style={{ margin: '0 0 4px 0', fontSize: '0.85em' }}>
+                            <strong>Media Files Location:</strong>
+                        </p>
+                        <code style={{ fontSize: '0.8em', wordBreak: 'break-all' }}>{mediaPath}</code>
+                    </div>
+                )}
+
                 <p className="hint" style={{ marginTop: 16, fontSize: '0.9em' }}>
-                    💡 Use <strong>File → Database Explorer</strong> in the menu to explore the database
+                    💡 Use <strong>File → Database Explorer</strong> to explore the database<br />
+                    ⚙️ Use <strong>File → Settings</strong> to configure media files location
                 </p>
             </div>
         </div>
