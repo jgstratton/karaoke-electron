@@ -1,35 +1,28 @@
 import React, { useEffect, useState } from 'react'
 import PouchDB from 'pouchdb-browser'
+import DatabaseExplorer from './DatabaseExplorer.jsx'
 import './styles.css'
 
 const db = new PouchDB('karaoke-db')
 
 export default function App() {
+    // Check if we should show the database explorer
+    const urlParams = new URLSearchParams(window.location.search)
+    const isDbExplorer = urlParams.get('view') === 'dbexplorer'
+    
+    if (isDbExplorer) {
+        return <DatabaseExplorer />
+    }
+
     const [name, setName] = useState('...')
     const [input, setInput] = useState('')
     const [saving, setSaving] = useState(false)
-    const [dbInfo, setDbInfo] = useState(null)
-    const [allDocs, setAllDocs] = useState([])
 
     useEffect(() => {
         let cancelled = false
 
         async function load() {
             try {
-                // Get database info
-                const info = await db.info()
-                setDbInfo(info)
-
-                // Log database adapter and location info
-                console.log('Database adapter:', db.adapter)
-                console.log('Database name:', db.name)
-                console.log('Current location:', window.location.href)
-                console.log('User agent:', navigator.userAgent)
-
-                // Get all documents
-                const result = await db.allDocs({ include_docs: true })
-                setAllDocs(result.rows)
-
                 const doc = await db.get('user')
                 if (!cancelled) {
                     const n = doc.name || 'World'
@@ -43,9 +36,6 @@ export default function App() {
                     if (!cancelled) {
                         setName('World')
                         setInput('World')
-                        // Refresh all docs after creating the initial doc
-                        const result = await db.allDocs({ include_docs: true })
-                        setAllDocs(result.rows)
                     }
                 } else {
                     console.error('Failed to load name', err)
@@ -77,10 +67,6 @@ export default function App() {
             doc.name = input.trim() || 'World'
             await db.put(doc)
             setName(doc.name)
-
-            // Refresh all docs after save
-            const result = await db.allDocs({ include_docs: true })
-            setAllDocs(result.rows)
         } catch (e) {
             console.error('Save failed', e)
         } finally {
@@ -98,33 +84,10 @@ export default function App() {
                     <input value={input} onChange={(e) => setInput(e.target.value)} placeholder="Your name" />
                     <button onClick={save} disabled={saving}>{saving ? 'Saving…' : 'Save'}</button>
                 </div>
-            </div>
-
-            {/* Database Explorer */}
-            <div className="card" style={{ marginTop: 16 }}>
-                <h2 style={{ margin: '0 0 12px 0', fontSize: '1.2em' }}>Database Explorer</h2>
-
-                {dbInfo && (
-                    <div style={{ marginBottom: 16 }}>
-                        <p className="hint" style={{ margin: '0 0 8px 0' }}>
-                            Database: {dbInfo.db_name} | Docs: {dbInfo.doc_count} | Size: {Math.round(dbInfo.data_size / 1024)}KB
-                        </p>
-                    </div>
-                )}
-
-                <details>
-                    <summary style={{ cursor: 'pointer', marginBottom: 8 }}>All Documents ({allDocs.length})</summary>
-                    <pre style={{
-                        background: '#0a0d12',
-                        padding: 12,
-                        borderRadius: 6,
-                        fontSize: '0.85em',
-                        overflow: 'auto',
-                        maxHeight: 300
-                    }}>
-                        {JSON.stringify(allDocs.map(row => row.doc), null, 2)}
-                    </pre>
-                </details>
+                
+                <p className="hint" style={{ marginTop: 16, fontSize: '0.9em' }}>
+                    💡 Use <strong>File → Database Explorer</strong> in the menu to explore the database
+                </p>
             </div>
         </div>
     )
