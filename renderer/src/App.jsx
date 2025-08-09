@@ -9,7 +9,7 @@ export default function App() {
     // Check if we should show the database explorer
     const urlParams = new URLSearchParams(window.location.search)
     const isDbExplorer = urlParams.get('view') === 'dbexplorer'
-    
+
     if (isDbExplorer) {
         return <DatabaseExplorer />
     }
@@ -84,7 +84,7 @@ export default function App() {
                     <input value={input} onChange={(e) => setInput(e.target.value)} placeholder="Your name" />
                     <button onClick={save} disabled={saving}>{saving ? 'Saving…' : 'Save'}</button>
                 </div>
-                
+
                 <p className="hint" style={{ marginTop: 16, fontSize: '0.9em' }}>
                     💡 Use <strong>File → Database Explorer</strong> in the menu to explore the database
                 </p>
