@@ -1,20 +1,24 @@
-import React, { useRef, useEffect, useState } from 'react'
+import React, { useRef, useEffect, useState, forwardRef, useImperativeHandle } from 'react'
 
-export default function VideoPlayer({ currentVideo, onVideoEnd }) {
+const VideoPlayer = forwardRef(({ currentVideo, onVideoEnd, isMainPlayer = false, style = {} }, ref) => {
 	const videoRef = useRef(null)
 	const [isPlaying, setIsPlaying] = useState(false)
 	const [currentTime, setCurrentTime] = useState(0)
 	const [duration, setDuration] = useState(0)
 	const [volume, setVolume] = useState(1)
 	const [showControls, setShowControls] = useState(true)
+	const [isSyncing, setIsSyncing] = useState(false) // Prevent infinite sync loops
 
 	useEffect(() => {
 		if (currentVideo && videoRef.current) {
 			console.log('Loading video:', currentVideo)
 			videoRef.current.load()
 			setCurrentTime(0)
+
+			// Mute the preview player (main window), keep sound for main player (separate window)
+			videoRef.current.muted = !isMainPlayer
 		}
-	}, [currentVideo])
+	}, [currentVideo, isMainPlayer])
 
 	useEffect(() => {
 		const video = videoRef.current
@@ -59,12 +63,71 @@ export default function VideoPlayer({ currentVideo, onVideoEnd }) {
 		}
 	}, [onVideoEnd])
 
+	// Listen for video control sync commands from other windows
+	useEffect(() => {
+		if (window.videoControls) {
+			const handleVideoControl = (event, action, data) => {
+				if (isSyncing) return // Prevent sync loops
+
+				const video = videoRef.current
+				if (!video) return
+
+				console.log('Received video control:', action, data)
+				setIsSyncing(true)
+
+				switch (action) {
+					case 'play':
+						video.play().catch(console.error)
+						break
+					case 'pause':
+						video.pause()
+						break
+					case 'seek':
+						video.currentTime = data.time
+						break
+					case 'volume':
+						video.volume = data.volume
+						setVolume(data.volume)
+						break
+				}
+
+				setTimeout(() => setIsSyncing(false), 100) // Reset sync flag after brief delay
+			}
+
+			window.videoControls.onVideoControl(handleVideoControl)
+
+			return () => {
+				window.videoControls.removeVideoControlListener(handleVideoControl)
+			}
+		}
+	}, [isSyncing])
+
+	const sendControlToOtherPlayers = (action, data) => {
+		if (window.videoControls && !isSyncing) {
+			window.videoControls.sendControl(action, data)
+		}
+	}
+
+	// Expose methods to parent component
+	useImperativeHandle(ref, () => ({
+		onGetVideoState: () => ({
+			currentVideo,
+			currentTime,
+			isPlaying,
+			volume,
+			duration,
+		}),
+		videoRef, // Expose the video ref
+	}))
+
 	const togglePlay = () => {
 		if (videoRef.current) {
 			if (isPlaying) {
 				videoRef.current.pause()
+				sendControlToOtherPlayers('pause')
 			} else {
-				videoRef.current.play()
+				videoRef.current.play().catch(console.error)
+				sendControlToOtherPlayers('play')
 			}
 		}
 	}
@@ -75,6 +138,7 @@ export default function VideoPlayer({ currentVideo, onVideoEnd }) {
 			const pos = (e.clientX - rect.left) / rect.width
 			const time = pos * duration
 			videoRef.current.currentTime = time
+			sendControlToOtherPlayers('seek', { time })
 		}
 	}
 
@@ -83,6 +147,7 @@ export default function VideoPlayer({ currentVideo, onVideoEnd }) {
 		setVolume(newVolume)
 		if (videoRef.current) {
 			videoRef.current.volume = newVolume
+			sendControlToOtherPlayers('volume', { volume: newVolume })
 		}
 	}
 
@@ -117,24 +182,26 @@ export default function VideoPlayer({ currentVideo, onVideoEnd }) {
 		<div
 			style={{
 				background: '#0a0d12',
-				borderRadius: '8px',
-				border: '1px solid #2a2f3a',
+				borderRadius: isMainPlayer ? '0' : '8px',
+				border: isMainPlayer ? 'none' : '1px solid #2a2f3a',
 				overflow: 'hidden',
+				...style,
 			}}
-			onMouseEnter={() => setShowControls(true)}
-			onMouseLeave={() => setShowControls(false)}
+			onMouseEnter={() => !isMainPlayer && setShowControls(true)}
+			onMouseLeave={() => !isMainPlayer && setShowControls(false)}
 		>
 			<div style={{ position: 'relative' }}>
 				<video
 					ref={videoRef}
 					style={{
 						width: '100%',
-						height: '400px',
+						height: isMainPlayer ? '100vh' : '400px',
 						objectFit: 'contain',
 						background: '#000',
 					}}
 					controls={false}
 					preload="metadata"
+					muted={!isMainPlayer}
 				>
 					{currentVideo && (
 						<source src={currentVideo} />
@@ -142,8 +209,8 @@ export default function VideoPlayer({ currentVideo, onVideoEnd }) {
 					Your browser does not support the video tag.
 				</video>
 
-				{/* Custom Controls Overlay */}
-				{showControls && (
+				{/* Custom Controls Overlay - Only show on preview (main window), not on main player window */}
+				{showControls && !isMainPlayer && (
 					<div
 						style={{
 							position: 'absolute',
@@ -247,4 +314,8 @@ export default function VideoPlayer({ currentVideo, onVideoEnd }) {
 			</div>
 		</div>
 	)
-}
+})
+
+VideoPlayer.displayName = 'VideoPlayer'
+
+export default VideoPlayer

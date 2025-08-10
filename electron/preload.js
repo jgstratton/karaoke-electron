@@ -19,3 +19,18 @@ contextBridge.exposeInMainWorld('videoPlayer', {
 	onPlayVideo: callback => ipcRenderer.on('play-video', callback),
 	removePlayVideoListener: callback => ipcRenderer.removeListener('play-video', callback),
 })
+
+// Expose video control sync
+contextBridge.exposeInMainWorld('videoControls', {
+	sendControl: (action, data) => ipcRenderer.invoke('video-control', action, data),
+	onVideoControl: callback => ipcRenderer.on('video-control', callback),
+	removeVideoControlListener: callback => ipcRenderer.removeListener('video-control', callback),
+})
+
+// Expose video state sync
+contextBridge.exposeInMainWorld('videoState', {
+	getCurrentState: () => ipcRenderer.invoke('get-current-video-state'),
+	onGetVideoState: callback => ipcRenderer.on('get-video-state', callback),
+	sendVideoState: state => ipcRenderer.send('video-state-response', state),
+	removeGetVideoStateListener: callback => ipcRenderer.removeListener('get-video-state', callback),
+})

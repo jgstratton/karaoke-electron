@@ -7,6 +7,7 @@ let mainWindow
 let dbExplorerWindow
 let settingsWindow
 let mediaBrowserWindow
+let videoPlayerWindow
 
 function createMenu() {
 	const template = [
@@ -41,6 +42,16 @@ function createMenu() {
 							return
 						}
 						createMediaBrowserWindow()
+					},
+				},
+				{
+					label: 'Launch Video Player',
+					click: () => {
+						if (videoPlayerWindow) {
+							videoPlayerWindow.focus()
+							return
+						}
+						createVideoPlayerWindow()
 					},
 				},
 				{ type: 'separator' },
@@ -164,6 +175,38 @@ function createMediaBrowserWindow() {
 	})
 }
 
+function createVideoPlayerWindow() {
+	videoPlayerWindow = new BrowserWindow({
+		width: 1200,
+		height: 800,
+		webPreferences: {
+			preload: path.join(__dirname, 'preload.js'),
+			contextIsolation: true,
+			nodeIntegration: false,
+			sandbox: false,
+			webSecurity: false, // Allow loading of local resources through custom protocol
+		},
+		parent: mainWindow,
+		modal: false,
+		title: 'Video Player',
+		backgroundColor: '#000000',
+	})
+
+	const devServerURL = process.env.VITE_DEV_SERVER_URL
+	if (devServerURL) {
+		videoPlayerWindow.loadURL(devServerURL + '?view=videoplayer')
+	} else {
+		const indexHtml =
+			url.pathToFileURL(path.join(__dirname, '..', 'dist', 'index.html')).toString() +
+			'?view=videoplayer'
+		videoPlayerWindow.loadURL(indexHtml)
+	}
+
+	videoPlayerWindow.on('closed', () => {
+		videoPlayerWindow = null
+	})
+}
+
 // IPC Handlers
 ipcMain.handle('select-folder', async () => {
 	const result = await dialog.showOpenDialog(mainWindow, {
@@ -253,11 +296,21 @@ ipcMain.handle('scan-media-files', async (event, folderPath) => {
 // IPC handler for playing videos
 ipcMain.handle('play-video', async (event, videoPath) => {
 	if (mainWindow) {
-		// Convert the file path to a safe protocol URL
-		const safeUrl = 'safe-file://' + videoPath
+		// Convert the file path to a safe protocol URL with proper encoding
+		// Use encodeURI to handle special characters including quotes
+		const encodedPath = encodeURI(videoPath.replace(/\\/g, '/'))
+		const safeUrl = 'safe-file://' + encodedPath
+
+		console.log('Original path:', videoPath)
+		console.log('Encoded safe URL:', safeUrl)
 
 		// Send the safe URL to the main window
 		mainWindow.webContents.send('play-video', safeUrl)
+
+		// Also send to video player window if it's open
+		if (videoPlayerWindow) {
+			videoPlayerWindow.webContents.send('play-video', safeUrl)
+		}
 
 		// Close media browser window if it's open
 		if (mediaBrowserWindow) {
@@ -270,6 +323,53 @@ ipcMain.handle('play-video', async (event, videoPath) => {
 		return true
 	}
 	return false
+})
+
+// IPC handlers for video sync between main window and video player window
+ipcMain.handle('video-control', async (event, action, data) => {
+	const windows = [mainWindow, videoPlayerWindow].filter(w => w && !w.webContents.isDestroyed())
+
+	// Send the control action to all video windows except the sender
+	windows.forEach(window => {
+		if (window.webContents !== event.sender) {
+			window.webContents.send('video-control', action, data)
+		}
+	})
+
+	return true
+})
+
+// IPC handler to get current video state from main window
+ipcMain.handle('get-current-video-state', async (event) => {
+	if (!mainWindow || mainWindow.webContents.isDestroyed()) {
+		return null;
+	}
+	var requester = event.sender;
+
+	// Request current video state from main window
+	return new Promise((resolve) => {
+		// Set up a one-time listener for the response
+		const responseHandler = (event, state) => {
+			mainWindow.webContents.removeListener('video-state-response', responseHandler)
+			// If there's a current video, also send it to the requesting window
+			if (state && state.currentVideo && event.sender) {
+				console.log('Sending current video to requesting window:', state.currentVideo)
+				requester.send('play-video', state.currentVideo)
+			}
+
+			resolve(state)
+		}
+		mainWindow.webContents.on('video-state-response', responseHandler)
+
+		// Request the state from main window
+		mainWindow.webContents.send('get-video-state')
+
+		// Timeout after 5 seconds if no response
+		setTimeout(() => {
+			mainWindow.webContents.removeListener('video-state-response', responseHandler)
+			resolve(null)
+		}, 5000)
+	});
 })
 
 function createWindow() {
@@ -304,8 +404,19 @@ function createWindow() {
 app.whenReady().then(() => {
 	// Register a custom protocol to serve local video files
 	protocol.registerFileProtocol('safe-file', (request, callback) => {
-		const filePath = request.url.replace('safe-file://', '')
-		callback({ path: filePath })
+		try {
+			// Decode the URL to handle special characters
+			const encodedPath = request.url.replace('safe-file://', '')
+			const filePath = decodeURI(encodedPath).replace(/\//g, '\\')
+
+			console.log('Protocol handler - Request URL:', request.url)
+			console.log('Protocol handler - Decoded path:', filePath)
+
+			callback({ path: filePath })
+		} catch (error) {
+			console.error('Error in protocol handler:', error)
+			callback({ error: -2 }) // FILE_NOT_FOUND
+		}
 	})
 
 	createWindow()

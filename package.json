@@ -6,7 +6,8 @@
 	"author": "",
 	"license": "MIT",
 	"scripts": {
-		"dev": "cross-env VITE_DEV_SERVER_URL=http://localhost:5173 concurrently -k \"vite\" \"wait-on http://localhost:5173 && electron .\"",
+		"dev": "cross-env VITE_DEV_SERVER_URL=http://localhost:5173 concurrently -k \"vite\" \"wait-on http://localhost:5173 && electron --inspect .\"",
+		"dev:debug": "cross-env VITE_DEV_SERVER_URL=http://localhost:5173 concurrently -k \"vite\" \"wait-on http://localhost:5173 && electron --inspect .\"",
 		"build": "vite build",
 		"start": "electron .",
 		"package": "npm run build && electron-builder",

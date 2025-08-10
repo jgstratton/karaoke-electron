@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import PouchDB from 'pouchdb-browser'
 import DatabaseExplorer from './DatabaseExplorer.jsx'
 import Settings from './Settings.jsx'
 import MediaBrowser from './MediaBrowser.jsx'
 import VideoPlayer from './VideoPlayer.jsx'
+import VideoPlayerWindow from './VideoPlayerWindow.jsx'
 import './styles.css'
 
 const db = new PouchDB('karaoke-db')
@@ -25,11 +26,16 @@ export default function App() {
 		return <MediaBrowser />
 	}
 
+	if (view === 'videoplayer') {
+		return <VideoPlayerWindow />
+	}
+
 	const [name, setName] = useState('...')
 	const [input, setInput] = useState('')
 	const [saving, setSaving] = useState(false)
 	const [mediaPath, setMediaPath] = useState('')
 	const [currentVideo, setCurrentVideo] = useState('')
+	const videoPlayerRef = useRef(null)
 
 	useEffect(() => {
 		let cancelled = false
@@ -93,6 +99,36 @@ export default function App() {
 			}
 		}
 	}, [])
+
+	// Listen for video state requests from video player window
+	useEffect(() => {
+		if (window.videoState) {
+			const handleGetVideoState = () => {
+				// Get current video state from the VideoPlayer component
+				let videoState = {
+					currentVideo: currentVideo,
+					currentTime: 0,
+					isPlaying: false,
+					volume: 1,
+				}
+
+				// Get detailed state from VideoPlayer ref if available
+				if (videoPlayerRef.current && videoPlayerRef.current.getVideoState) {
+					const detailedState = videoPlayerRef.current.getVideoState()
+					videoState = { ...videoState, ...detailedState }
+				}
+
+				console.log('Sending video state:', videoState)
+				window.videoState.sendVideoState(videoState)
+			}
+
+			window.videoState.onGetVideoState(handleGetVideoState)
+
+			return () => {
+				window.videoState.removeGetVideoStateListener(handleGetVideoState)
+			}
+		}
+	}, [currentVideo])
 
 	const save = async () => {
 		setSaving(true)
@@ -167,6 +203,7 @@ export default function App() {
 			<div className="card" style={{ marginTop: 16 }}>
 				<h2 style={{ margin: '0 0 16px 0', fontSize: '1.2em' }}>Video Player</h2>
 				<VideoPlayer
+					ref={videoPlayerRef}
 					currentVideo={currentVideo}
 					onVideoEnd={() => setCurrentVideo('')}
 				/>
