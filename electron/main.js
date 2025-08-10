@@ -5,6 +5,7 @@ const url = require('url');
 let mainWindow;
 let dbExplorerWindow;
 let settingsWindow;
+let mediaBrowserWindow;
 
 function createMenu() {
     const template = [
@@ -29,6 +30,16 @@ function createMenu() {
                             return;
                         }
                         createSettingsWindow();
+                    }
+                },
+                {
+                    label: 'Media Browser',
+                    click: () => {
+                        if (mediaBrowserWindow) {
+                            mediaBrowserWindow.focus();
+                            return;
+                        }
+                        createMediaBrowserWindow();
                     }
                 },
                 { type: 'separator' },
@@ -118,6 +129,34 @@ function createSettingsWindow() {
     });
 }
 
+function createMediaBrowserWindow() {
+    mediaBrowserWindow = new BrowserWindow({
+        width: 900,
+        height: 700,
+        webPreferences: {
+            preload: path.join(__dirname, 'preload.js'),
+            contextIsolation: true,
+            nodeIntegration: false,
+            sandbox: false,
+        },
+        parent: mainWindow,
+        modal: false,
+        title: 'Media Browser'
+    });
+
+    const devServerURL = process.env.VITE_DEV_SERVER_URL;
+    if (devServerURL) {
+        mediaBrowserWindow.loadURL(devServerURL + '?view=mediabrowser');
+    } else {
+        const indexHtml = url.pathToFileURL(path.join(__dirname, '..', 'dist', 'index.html')).toString() + '?view=mediabrowser';
+        mediaBrowserWindow.loadURL(indexHtml);
+    }
+
+    mediaBrowserWindow.on('closed', () => {
+        mediaBrowserWindow = null;
+    });
+}
+
 // IPC Handlers
 ipcMain.handle('select-folder', async () => {
     const result = await dialog.showOpenDialog(mainWindow, {
@@ -138,6 +177,58 @@ ipcMain.handle('validate-path', async (event, folderPath) => {
         return stats.isDirectory();
     } catch {
         return false;
+    }
+});
+
+ipcMain.handle('scan-media-files', async (event, folderPath) => {
+    const fs = require('fs');
+    const path = require('path');
+
+    if (!folderPath) {
+        return [];
+    }
+
+    try {
+        // Common video file extensions
+        const videoExtensions = ['.mp4', '.avi', '.mkv', '.mov', '.wmv', '.flv', '.webm', '.m4v', '.mpg', '.mpeg', '.3gp'];
+
+        async function scanDirectory(dirPath, relativePath = '') {
+            const items = [];
+            const entries = await fs.promises.readdir(dirPath, { withFileTypes: true });
+
+            for (const entry of entries) {
+                const fullPath = path.join(dirPath, entry.name);
+                const relativeFilePath = path.join(relativePath, entry.name);
+
+                if (entry.isDirectory()) {
+                    // Recursively scan subdirectories
+                    const subItems = await scanDirectory(fullPath, relativeFilePath);
+                    items.push(...subItems);
+                } else if (entry.isFile()) {
+                    const ext = path.extname(entry.name).toLowerCase();
+                    if (videoExtensions.includes(ext)) {
+                        const stats = await fs.promises.stat(fullPath);
+                        items.push({
+                            name: entry.name,
+                            path: fullPath,
+                            relativePath: relativeFilePath,
+                            size: stats.size,
+                            modified: stats.mtime,
+                            extension: ext
+                        });
+                    }
+                }
+            }
+
+            return items;
+        }
+
+        const files = await scanDirectory(folderPath);
+        return files;
+
+    } catch (error) {
+        console.error('Error scanning media files:', error);
+        throw error;
     }
 });
 

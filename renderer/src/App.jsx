@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import PouchDB from 'pouchdb-browser'
 import DatabaseExplorer from './DatabaseExplorer.jsx'
 import Settings from './Settings.jsx'
+import MediaBrowser from './MediaBrowser.jsx'
 import './styles.css'
 
 const db = new PouchDB('karaoke-db')
@@ -17,6 +18,10 @@ export default function App() {
 
     if (view === 'settings') {
         return <Settings />
+    }
+
+    if (view === 'mediabrowser') {
+        return <MediaBrowser />
     }
 
     const [name, setName] = useState('...')
@@ -119,7 +124,8 @@ export default function App() {
 
                 <p className="hint" style={{ marginTop: 16, fontSize: '0.9em' }}>
                     💡 Use <strong>File → Database Explorer</strong> to explore the database<br />
-                    ⚙️ Use <strong>File → Settings</strong> to configure media files location
+                    ⚙️ Use <strong>File → Settings</strong> to configure media files location<br />
+                    🎬 Use <strong>File → Media Browser</strong> to search and browse video files
                 </p>
             </div>
         </div>
