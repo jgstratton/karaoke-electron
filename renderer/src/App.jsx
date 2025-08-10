@@ -8,126 +8,142 @@ import './styles.css'
 const db = new PouchDB('karaoke-db')
 
 export default function App() {
-    // Check which view to show based on URL params
-    const urlParams = new URLSearchParams(window.location.search)
-    const view = urlParams.get('view')
+	// Check which view to show based on URL params
+	const urlParams = new URLSearchParams(window.location.search)
+	const view = urlParams.get('view')
 
-    if (view === 'dbexplorer') {
-        return <DatabaseExplorer />
-    }
+	if (view === 'dbexplorer') {
+		return <DatabaseExplorer />
+	}
 
-    if (view === 'settings') {
-        return <Settings />
-    }
+	if (view === 'settings') {
+		return <Settings />
+	}
 
-    if (view === 'mediabrowser') {
-        return <MediaBrowser />
-    }
+	if (view === 'mediabrowser') {
+		return <MediaBrowser />
+	}
 
-    const [name, setName] = useState('...')
-    const [input, setInput] = useState('')
-    const [saving, setSaving] = useState(false)
-    const [mediaPath, setMediaPath] = useState('')
+	const [name, setName] = useState('...')
+	const [input, setInput] = useState('')
+	const [saving, setSaving] = useState(false)
+	const [mediaPath, setMediaPath] = useState('')
 
-    useEffect(() => {
-        let cancelled = false
+	useEffect(() => {
+		let cancelled = false
 
-        async function load() {
-            try {
-                const doc = await db.get('user')
-                if (!cancelled) {
-                    const n = doc.name || 'World'
-                    setName(n)
-                    setInput(n)
-                }
-            } catch (err) {
-                if (err && err.status === 404) {
-                    const doc = { _id: 'user', name: 'World' }
-                    try { await db.put(doc) } catch { }
-                    if (!cancelled) {
-                        setName('World')
-                        setInput('World')
-                    }
-                } else {
-                    console.error('Failed to load name', err)
-                    if (!cancelled) {
-                        setName('World')
-                        setInput('World')
-                    }
-                }
-            }
+		async function load() {
+			try {
+				const doc = await db.get('user')
+				if (!cancelled) {
+					const n = doc.name || 'World'
+					setName(n)
+					setInput(n)
+				}
+			} catch (err) {
+				if (err && err.status === 404) {
+					const doc = { _id: 'user', name: 'World' }
+					try {
+						await db.put(doc)
+					} catch {}
+					if (!cancelled) {
+						setName('World')
+						setInput('World')
+					}
+				} else {
+					console.error('Failed to load name', err)
+					if (!cancelled) {
+						setName('World')
+						setInput('World')
+					}
+				}
+			}
 
-            // Load media path from settings
-            try {
-                const settingsDoc = await db.get('settings')
-                if (!cancelled && settingsDoc.mediaPath) {
-                    setMediaPath(settingsDoc.mediaPath)
-                }
-            } catch (err) {
-                // Settings don't exist yet, that's fine
-            }
-        }
+			// Load media path from settings
+			try {
+				const settingsDoc = await db.get('settings')
+				if (!cancelled && settingsDoc.mediaPath) {
+					setMediaPath(settingsDoc.mediaPath)
+				}
+			} catch (err) {
+				// Settings don't exist yet, that's fine
+			}
+		}
 
-        load()
-        return () => { cancelled = true }
-    }, [])
+		load()
+		return () => {
+			cancelled = true
+		}
+	}, [])
 
-    const save = async () => {
-        setSaving(true)
-        try {
-            let doc
-            try {
-                doc = await db.get('user')
-            } catch (e) {
-                if (e.status === 404) {
-                    doc = { _id: 'user' }
-                } else {
-                    throw e
-                }
-            }
-            doc.name = input.trim() || 'World'
-            await db.put(doc)
-            setName(doc.name)
-        } catch (e) {
-            console.error('Save failed', e)
-        } finally {
-            setSaving(false)
-        }
-    }
+	const save = async () => {
+		setSaving(true)
+		try {
+			let doc
+			try {
+				doc = await db.get('user')
+			} catch (e) {
+				if (e.status === 404) {
+					doc = { _id: 'user' }
+				} else {
+					throw e
+				}
+			}
+			doc.name = input.trim() || 'World'
+			await db.put(doc)
+			setName(doc.name)
+		} catch (e) {
+			console.error('Save failed', e)
+		} finally {
+			setSaving(false)
+		}
+	}
 
-    return (
-        <div className="container">
-            <div className="card">
-                <h1 style={{ marginTop: 0 }}>Hello, {name}</h1>
-                <p className="hint">Data source: PouchDB (local)</p>
+	return (
+		<div className="container">
+			<div className="card">
+				<h1 style={{ marginTop: 0 }}>Hello, {name}</h1>
+				<p className="hint">Data source: PouchDB (local)</p>
 
-                <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
-                    <input value={input} onChange={(e) => setInput(e.target.value)} placeholder="Your name" />
-                    <button onClick={save} disabled={saving}>{saving ? 'Saving…' : 'Save'}</button>
-                </div>
+				<div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+					<input
+						value={input}
+						onChange={e => setInput(e.target.value)}
+						placeholder="Your name"
+					/>
+					<button onClick={save} disabled={saving}>
+						{saving ? 'Saving…' : 'Save'}
+					</button>
+				</div>
 
-                {/* Display current media path if set */}
-                {mediaPath && (
-                    <div style={{
-                        marginTop: 16,
-                        padding: 12,
-                        background: '#1a1f2e',
-                        border: '1px solid #2a2f3a',
-                        borderRadius: 6
-                    }}>
-                        <p className="hint" style={{ margin: '0 0 4px 0', fontSize: '0.85em' }}>
-                            <strong>Media Files Location:</strong>
-                        </p>
-                        <code style={{ fontSize: '0.8em', wordBreak: 'break-all' }}>{mediaPath}</code>
-                    </div>
-                )}
+				{/* Display current media path if set */}
+				{mediaPath && (
+					<div
+						style={{
+							marginTop: 16,
+							padding: 12,
+							background: '#1a1f2e',
+							border: '1px solid #2a2f3a',
+							borderRadius: 6,
+						}}
+					>
+						<p className="hint" style={{ margin: '0 0 4px 0', fontSize: '0.85em' }}>
+							<strong>Media Files Location:</strong>
+						</p>
+						<code style={{ fontSize: '0.8em', wordBreak: 'break-all' }}>
+							{mediaPath}
+						</code>
+					</div>
+				)}
 
-                <p className="hint" style={{ marginTop: 16, fontSize: '0.9em' }}>
-                    💡 Use <strong>File → Database Explorer</strong> to explore the database<br />
-                    ⚙️ Use <strong>File → Settings</strong> to configure media files location<br />
-                    🎬 Use <strong>File → Media Browser</strong> to search and browse video files
-                </p>
-            </div>
-        </div>
-    )
+				<p className="hint" style={{ marginTop: 16, fontSize: '0.9em' }}>
+					💡 Use <strong>File → Database Explorer</strong> to explore the database
+					<br />
+					⚙️ Use <strong>File → Settings</strong> to configure media files location
+					<br />
+					🎬 Use <strong>File → Media Browser</strong> to search and browse video files
+				</p>
+			</div>
+		</div>
+	)
 }

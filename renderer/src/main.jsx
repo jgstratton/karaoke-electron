@@ -5,11 +5,11 @@ import './styles.css'
 
 // Polyfill for libraries expecting Node.js globals
 if (typeof global === 'undefined') {
-    window.global = window.globalThis || window;
+	window.global = window.globalThis || window
 }
 
 createRoot(document.getElementById('root')).render(
-    <React.StrictMode>
-        <App />
-    </React.StrictMode>
+	<React.StrictMode>
+		<App />
+	</React.StrictMode>
 )

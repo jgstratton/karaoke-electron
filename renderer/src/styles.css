@@ -1,60 +1,69 @@
 /* Basic modern reset and styles */
 :root {
-    color-scheme: dark;
+	color-scheme: dark;
 }
 
 * {
-    box-sizing: border-box;
+	box-sizing: border-box;
 }
 
 html,
 body,
 #root {
-    height: 100%;
+	height: 100%;
 }
 
 body {
-    margin: 0;
-    font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial;
-    background: #0f1115;
-    color: #e7e9ea;
+	margin: 0;
+	font-family:
+		system-ui,
+		-apple-system,
+		Segoe UI,
+		Roboto,
+		Ubuntu,
+		Cantarell,
+		Noto Sans,
+		Helvetica Neue,
+		Arial;
+	background: #0f1115;
+	color: #e7e9ea;
 }
 
 .container {
-    padding: 24px;
-    max-width: 960px;
-    margin: 0 auto;
+	padding: 24px;
+	max-width: 960px;
+	margin: 0 auto;
 }
 
 .card {
-    background: #161a22;
-    border: 1px solid #2a2f3a;
-    border-radius: 12px;
-    padding: 20px;
+	background: #161a22;
+	border: 1px solid #2a2f3a;
+	border-radius: 12px;
+	padding: 20px;
 }
 
 .hint {
-    color: #a0a7b4;
+	color: #a0a7b4;
 }
 
 input {
-    background: #0f1115;
-    color: #e7e9ea;
-    border: 1px solid #2a2f3a;
-    border-radius: 8px;
-    padding: 8px 10px;
+	background: #0f1115;
+	color: #e7e9ea;
+	border: 1px solid #2a2f3a;
+	border-radius: 8px;
+	padding: 8px 10px;
 }
 
 button {
-    background: #006adc;
-    color: white;
-    border: 0;
-    border-radius: 8px;
-    padding: 8px 12px;
-    cursor: pointer;
+	background: #006adc;
+	color: white;
+	border: 0;
+	border-radius: 8px;
+	padding: 8px 12px;
+	cursor: pointer;
 }
 
 button:disabled {
-    opacity: 0.6;
-    cursor: default;
+	opacity: 0.6;
+	cursor: default;
 }

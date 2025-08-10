@@ -73,6 +73,6 @@ On Windows, you'll get an `.exe` installer in `release/`. Distribute that file t
 
 - If Electron fails to start in dev, ensure port 5173 is free or update the port in `vite.config.mjs` and the `dev` script (it waits on `http://localhost:5173`).
 - If packaging fails, try clearing previous build output:
-  ```powershell
-  rd /s /q dist ; rd /s /q release
-  ```
+    ```powershell
+    rd /s /q dist ; rd /s /q release
+    ```

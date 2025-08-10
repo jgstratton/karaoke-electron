@@ -1,16 +1,14 @@
 {
-    "compilerOptions": {
-        "jsx": "react-jsx",
-        "module": "ESNext",
-        "target": "ES2020",
-        "moduleResolution": "Bundler",
-        "allowJs": true,
-        "checkJs": false,
-        "strict": true,
-        "baseUrl": ".",
-        "paths": {}
-    },
-    "include": [
-        "renderer/src/**/*"
-    ]
+	"compilerOptions": {
+		"jsx": "react-jsx",
+		"module": "ESNext",
+		"target": "ES2020",
+		"moduleResolution": "Bundler",
+		"allowJs": true,
+		"checkJs": false,
+		"strict": true,
+		"baseUrl": ".",
+		"paths": {}
+	},
+	"include": ["renderer/src/**/*"]
 }
