@@ -1,6 +1,7 @@
-const { app, BrowserWindow, Menu, ipcMain, dialog } = require('electron')
+const { app, BrowserWindow, Menu, ipcMain, dialog, protocol } = require('electron')
 const path = require('path')
 const url = require('url')
+const fs = require('fs')
 
 let mainWindow
 let dbExplorerWindow
@@ -249,6 +250,28 @@ ipcMain.handle('scan-media-files', async (event, folderPath) => {
 	}
 })
 
+// IPC handler for playing videos
+ipcMain.handle('play-video', async (event, videoPath) => {
+	if (mainWindow) {
+		// Convert the file path to a safe protocol URL
+		const safeUrl = 'safe-file://' + videoPath
+
+		// Send the safe URL to the main window
+		mainWindow.webContents.send('play-video', safeUrl)
+
+		// Close media browser window if it's open
+		if (mediaBrowserWindow) {
+			mediaBrowserWindow.close()
+		}
+
+		// Focus the main window
+		mainWindow.focus()
+
+		return true
+	}
+	return false
+})
+
 function createWindow() {
 	mainWindow = new BrowserWindow({
 		width: 1000,
@@ -258,6 +281,7 @@ function createWindow() {
 			contextIsolation: true,
 			nodeIntegration: false,
 			sandbox: false, // Disable sandbox for compatibility with preload in most setups
+			webSecurity: false, // Allow loading of local resources through custom protocol
 		},
 	})
 
@@ -278,6 +302,12 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
+	// Register a custom protocol to serve local video files
+	protocol.registerFileProtocol('safe-file', (request, callback) => {
+		const filePath = request.url.replace('safe-file://', '')
+		callback({ path: filePath })
+	})
+
 	createWindow()
 	createMenu()
 

@@ -136,6 +136,14 @@ export default function MediaBrowser() {
 		}
 	}
 
+	const playVideo = filePath => {
+		if (window.fileSystem && window.fileSystem.playVideo) {
+			window.fileSystem.playVideo(filePath)
+		} else {
+			alert('Video playback is only available in the desktop app')
+		}
+	}
+
 	if (loading) {
 		return (
 			<div className="container">
@@ -284,9 +292,7 @@ export default function MediaBrowser() {
 									borderRadius: 8,
 									padding: 12,
 									marginBottom: 8,
-									cursor: 'pointer',
 								}}
-								onClick={() => openFile(file.path)}
 							>
 								<div
 									style={{
@@ -295,7 +301,10 @@ export default function MediaBrowser() {
 										alignItems: 'flex-start',
 									}}
 								>
-									<div style={{ flex: 1, minWidth: 0 }}>
+									<div
+										style={{ flex: 1, minWidth: 0, cursor: 'pointer' }}
+										onClick={() => openFile(file.path)}
+									>
 										<div style={{ fontWeight: 'bold', marginBottom: 4 }}>
 											{file.name}
 										</div>
@@ -310,17 +319,48 @@ export default function MediaBrowser() {
 											{formatDate(file.modified)}
 										</div>
 									</div>
+
 									<div
 										style={{
-											fontSize: '0.75em',
-											background: '#006adc',
-											color: 'white',
-											padding: '2px 6px',
-											borderRadius: 4,
+											display: 'flex',
+											alignItems: 'center',
+											gap: 8,
 											marginLeft: 8,
 										}}
 									>
-										{file.extension.toUpperCase()}
+										<button
+											onClick={e => {
+												e.stopPropagation()
+												playVideo(file.path)
+											}}
+											style={{
+												background: '#28a745',
+												color: 'white',
+												border: 'none',
+												borderRadius: 6,
+												padding: '6px 12px',
+												fontSize: '0.8em',
+												cursor: 'pointer',
+												display: 'flex',
+												alignItems: 'center',
+												gap: 4,
+											}}
+											title="Play video in main window"
+										>
+											▶️ Play
+										</button>
+
+										<div
+											style={{
+												fontSize: '0.75em',
+												background: '#006adc',
+												color: 'white',
+												padding: '2px 6px',
+												borderRadius: 4,
+											}}
+										>
+											{file.extension.toUpperCase()}
+										</div>
 									</div>
 								</div>
 							</div>

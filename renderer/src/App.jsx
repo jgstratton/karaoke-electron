@@ -3,6 +3,7 @@ import PouchDB from 'pouchdb-browser'
 import DatabaseExplorer from './DatabaseExplorer.jsx'
 import Settings from './Settings.jsx'
 import MediaBrowser from './MediaBrowser.jsx'
+import VideoPlayer from './VideoPlayer.jsx'
 import './styles.css'
 
 const db = new PouchDB('karaoke-db')
@@ -28,6 +29,7 @@ export default function App() {
 	const [input, setInput] = useState('')
 	const [saving, setSaving] = useState(false)
 	const [mediaPath, setMediaPath] = useState('')
+	const [currentVideo, setCurrentVideo] = useState('')
 
 	useEffect(() => {
 		let cancelled = false
@@ -45,7 +47,7 @@ export default function App() {
 					const doc = { _id: 'user', name: 'World' }
 					try {
 						await db.put(doc)
-					} catch {}
+					} catch { }
 					if (!cancelled) {
 						setName('World')
 						setInput('World')
@@ -73,6 +75,22 @@ export default function App() {
 		load()
 		return () => {
 			cancelled = true
+		}
+	}, [])
+
+	// Listen for video play commands from media browser
+	useEffect(() => {
+		if (window.videoPlayer) {
+			const handlePlayVideo = (event, videoPath) => {
+				console.log('Received play video command:', videoPath)
+				setCurrentVideo(videoPath)
+			}
+
+			window.videoPlayer.onPlayVideo(handlePlayVideo)
+
+			return () => {
+				window.videoPlayer.removePlayVideoListener(handlePlayVideo)
+			}
 		}
 	}, [])
 
@@ -143,6 +161,15 @@ export default function App() {
 					<br />
 					🎬 Use <strong>File → Media Browser</strong> to search and browse video files
 				</p>
+			</div>
+
+			{/* Video Player */}
+			<div className="card" style={{ marginTop: 16 }}>
+				<h2 style={{ margin: '0 0 16px 0', fontSize: '1.2em' }}>Video Player</h2>
+				<VideoPlayer
+					currentVideo={currentVideo}
+					onVideoEnd={() => setCurrentVideo('')}
+				/>
 			</div>
 		</div>
 	)
