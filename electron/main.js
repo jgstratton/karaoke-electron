@@ -295,34 +295,33 @@ ipcMain.handle('scan-media-files', async (event, folderPath) => {
 
 // IPC handler for playing videos
 ipcMain.handle('play-video', async (event, videoPath) => {
-	if (mainWindow) {
-		// Convert the file path to a safe protocol URL with proper encoding
-		// Use encodeURI to handle special characters including quotes
-		const encodedPath = encodeURI(videoPath.replace(/\\/g, '/'))
-		const safeUrl = 'safe-file://' + encodedPath
-
-		console.log('Original path:', videoPath)
-		console.log('Encoded safe URL:', safeUrl)
-
-		// Send the safe URL to the main window
-		mainWindow.webContents.send('play-video', safeUrl)
-
-		// Also send to video player window if it's open
-		if (videoPlayerWindow) {
-			videoPlayerWindow.webContents.send('play-video', safeUrl)
-		}
-
-		// Close media browser window if it's open
-		if (mediaBrowserWindow) {
-			mediaBrowserWindow.close()
-		}
-
-		// Focus the main window
-		mainWindow.focus()
-
-		return true
+	if (!mainWindow) {
+		return false;
 	}
-	return false
+
+	// Convert the file path to a safe protocol URL with proper encoding
+	// Use encodeURI to handle special characters including quotes
+	const encodedPath = encodeURI(videoPath.replace(/\\/g, '/'))
+	const safeUrl = 'safe-file://' + encodedPath
+
+	// Send the safe URL to the main window
+	mainWindow.webContents.send('play-video', safeUrl)
+
+	// Also send to video player window if it's open
+	if (videoPlayerWindow) {
+		videoPlayerWindow.webContents.send('play-video', safeUrl)
+	}
+
+	// Close media browser window if it's open
+	if (mediaBrowserWindow) {
+		mediaBrowserWindow.close()
+	}
+
+	// Focus the main window
+	mainWindow.focus()
+
+	return true
+
 })
 
 // IPC handlers for video sync between main window and video player window
@@ -337,39 +336,6 @@ ipcMain.handle('video-control', async (event, action, data) => {
 	})
 
 	return true
-})
-
-// IPC handler to get current video state from main window
-ipcMain.handle('get-current-video-state', async (event) => {
-	if (!mainWindow || mainWindow.webContents.isDestroyed()) {
-		return null;
-	}
-	var requester = event.sender;
-
-	// Request current video state from main window
-	return new Promise((resolve) => {
-		// Set up a one-time listener for the response
-		const responseHandler = (event, state) => {
-			mainWindow.webContents.removeListener('video-state-response', responseHandler)
-			// If there's a current video, also send it to the requesting window
-			if (state && state.currentVideo && event.sender) {
-				console.log('Sending current video to requesting window:', state.currentVideo)
-				requester.send('play-video', state.currentVideo)
-			}
-
-			resolve(state)
-		}
-		mainWindow.webContents.on('video-state-response', responseHandler)
-
-		// Request the state from main window
-		mainWindow.webContents.send('get-video-state')
-
-		// Timeout after 5 seconds if no response
-		setTimeout(() => {
-			mainWindow.webContents.removeListener('video-state-response', responseHandler)
-			resolve(null)
-		}, 5000)
-	});
 })
 
 function createWindow() {

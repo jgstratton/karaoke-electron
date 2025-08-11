@@ -11,11 +11,11 @@ contextBridge.exposeInMainWorld('fileSystem', {
 	selectFolder: () => ipcRenderer.invoke('select-folder'),
 	validatePath: path => ipcRenderer.invoke('validate-path', path),
 	scanMediaFiles: folderPath => ipcRenderer.invoke('scan-media-files', folderPath),
-	playVideo: videoPath => ipcRenderer.invoke('play-video', videoPath),
 })
 
 // Expose video player events
 contextBridge.exposeInMainWorld('videoPlayer', {
+	playVideo: videoPath => ipcRenderer.invoke('play-video', videoPath),
 	onPlayVideo: callback => ipcRenderer.on('play-video', callback),
 	removePlayVideoListener: callback => ipcRenderer.removeListener('play-video', callback),
 })
@@ -29,7 +29,6 @@ contextBridge.exposeInMainWorld('videoControls', {
 
 // Expose video state sync
 contextBridge.exposeInMainWorld('videoState', {
-	getCurrentState: () => ipcRenderer.invoke('get-current-video-state'),
 	onGetVideoState: callback => ipcRenderer.on('get-video-state', callback),
 	sendVideoState: state => ipcRenderer.send('video-state-response', state),
 	removeGetVideoStateListener: callback => ipcRenderer.removeListener('get-video-state', callback),

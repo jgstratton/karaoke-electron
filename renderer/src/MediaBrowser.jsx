@@ -120,29 +120,7 @@ export default function MediaBrowser() {
 		}
 	}
 
-	const openFile = filePath => {
-		if (window.fileSystem && window.fileSystem.openFile) {
-			window.fileSystem.openFile(filePath)
-		} else {
-			// Copy path to clipboard as fallback
-			navigator.clipboard
-				.writeText(filePath)
-				.then(() => {
-					alert('File path copied to clipboard: ' + filePath)
-				})
-				.catch(() => {
-					alert('File path: ' + filePath)
-				})
-		}
-	}
-
-	const playVideo = filePath => {
-		if (window.fileSystem && window.fileSystem.playVideo) {
-			window.fileSystem.playVideo(filePath)
-		} else {
-			alert('Video playback is only available in the desktop app')
-		}
-	}
+	const playVideo = filePath => window.videoPlayer.playVideo(filePath);
 
 	if (loading) {
 		return (
@@ -302,8 +280,7 @@ export default function MediaBrowser() {
 									}}
 								>
 									<div
-										style={{ flex: 1, minWidth: 0, cursor: 'pointer' }}
-										onClick={() => openFile(file.path)}
+										style={{ flex: 1, minWidth: 0 }}
 									>
 										<div style={{ fontWeight: 'bold', marginBottom: 4 }}>
 											{file.name}

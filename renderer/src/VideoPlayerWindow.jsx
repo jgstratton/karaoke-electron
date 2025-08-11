@@ -66,33 +66,6 @@ export default function VideoPlayerWindow() {
 		}
 	}, [currentVideo, pendingState])
 
-	// Request current video state from main window when this component loads
-	useEffect(() => {
-		const requestCurrentState = async () => {
-			if (window.videoState) {
-				try {
-					console.log('Video Player Window - Requesting current video state...')
-					const state = await window.videoState.getCurrentState()
-					if (state) {
-						console.log('Video Player Window - Received video state:', state)
-						// Note: the video file itself is sent via play-video event
-						// but we store the state to apply when video loads
-						if (state.currentVideo || state.isPlaying || state.currentTime > 0) {
-							setPendingState(state) // Store state to apply when video loads
-						}
-					} else {
-						console.log('Video Player Window - No current video state available')
-					}
-				} catch (error) {
-					console.error('Video Player Window - Error getting current state:', error)
-				}
-			}
-		}
-
-		// Small delay to ensure main window is ready
-		setTimeout(requestCurrentState, 100)
-	}, [])
-
 	return (
 		<div
 			style={{
