@@ -14,6 +14,10 @@ const VideoPlayer = ({ currentVideo, onVideoEnd, isMainPlayer = false, style = {
 		if (currentVideo && internalVideoRef.current) {
 			console.log('Loading video:', currentVideo)
 			internalVideoRef.current.load()
+			if (isPlaying) {
+				internalVideoRef.current.play()
+			}
+
 			setCurrentTime(0)
 
 			// Mute the preview player (main window), keep sound for main player (separate window)
@@ -320,6 +324,7 @@ const VideoPlayer = ({ currentVideo, onVideoEnd, isMainPlayer = false, style = {
 									style={{
 										width: '80px',
 										accentColor: '#006adc',
+										padding: 0
 									}}
 								/>
 							</div>
