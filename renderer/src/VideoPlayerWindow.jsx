@@ -7,19 +7,21 @@ export default function VideoPlayerWindow() {
 	const [pendingState, setPendingState] = useState(null) // Store state to apply when video loads
 
 	useEffect(() => {
-		// Listen for video play commands
-		if (window.videoPlayer) {
-			const handlePlayVideo = (event, videoPath) => {
-				console.log('Video Player Window - Received play video command:', videoPath)
-				setCurrentVideo(videoPath)
-			}
-
-			window.videoPlayer.onPlayVideo(handlePlayVideo)
-
-			return () => {
-				window.videoPlayer.removePlayVideoListener(handlePlayVideo)
-			}
+		if (!window.videoPlayer) {
+			return;
 		}
+
+		const handlePlayVideo = (event, videoPath) => {
+			console.log('Video Player Window - Received play video command:', videoPath)
+			setCurrentVideo(videoPath)
+		}
+
+		window.videoPlayer.onPlayVideo(handlePlayVideo)
+
+		return () => {
+			window.videoPlayer.removePlayVideoListener(handlePlayVideo)
+		}
+
 	}, [])
 
 	useEffect(() => {
@@ -42,26 +44,16 @@ export default function VideoPlayerWindow() {
 	useEffect(() => {
 		if (currentVideo && pendingState && videoPlayerRef.current) {
 			const applyState = () => {
-				const video = videoPlayerRef.current.videoRef?.current
-				if (video) {
-					console.log('Video Player Window - Applying pending state:', pendingState)
-					video.currentTime = pendingState.currentTime || 0
-					video.volume = pendingState.volume || 1
-					if (pendingState.isPlaying) {
-						video.play().catch(console.error)
-					}
-					setPendingState(null) // Clear pending state
-				}
+				console.log('Video Player Window - Applying pending state:', pendingState)
+				videoPlayerRef.current.applyVideoState(pendingState)
+				setPendingState(null) // Clear pending state
 			}
 
 			// Wait for video to load before applying state
-			const video = videoPlayerRef.current.videoRef?.current
-			if (video) {
-				if (video.readyState >= 2) { // HAVE_CURRENT_DATA
-					applyState()
-				} else {
-					video.addEventListener('loadeddata', applyState, { once: true })
-				}
+			if (videoPlayerRef.current.isVideoReady()) {
+				applyState()
+			} else {
+				videoPlayerRef.current.onVideoReady(applyState)
 			}
 		}
 	}, [currentVideo, pendingState])
@@ -81,7 +73,7 @@ export default function VideoPlayerWindow() {
 			{currentVideo ? (
 				<div style={{ width: '100%', height: '100%' }}>
 					<VideoPlayer
-						ref={videoPlayerRef}
+						videoRef={videoPlayerRef}
 						currentVideo={currentVideo}
 						onVideoEnd={() => setCurrentVideo('')}
 						isMainPlayer={true}

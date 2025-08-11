@@ -102,32 +102,35 @@ export default function App() {
 
 	// Listen for video state requests from video player window
 	useEffect(() => {
-		if (window.videoState) {
-			const handleGetVideoState = () => {
-				// Get current video state from the VideoPlayer component
-				let videoState = {
-					currentVideo: currentVideo,
-					currentTime: 0,
-					isPlaying: false,
-					volume: 1,
-				}
-
-				// Get detailed state from VideoPlayer ref if available
-				if (videoPlayerRef.current && videoPlayerRef.current.getVideoState) {
-					const detailedState = videoPlayerRef.current.getVideoState()
-					videoState = { ...videoState, ...detailedState }
-				}
-
-				console.log('Sending video state:', videoState)
-				window.videoState.sendVideoState(videoState)
-			}
-
-			window.videoState.onGetVideoState(handleGetVideoState)
-
-			return () => {
-				window.videoState.removeGetVideoStateListener(handleGetVideoState)
-			}
+		if (!window.videoState) {
+			return;
 		}
+
+		const handleGetVideoState = () => {
+			// Get current video state from the VideoPlayer component
+			let videoState = {
+				currentVideo: currentVideo,
+				currentTime: 0,
+				isPlaying: false,
+				volume: 1,
+			}
+
+			// Get detailed state from VideoPlayer ref if available
+			if (videoPlayerRef.current && videoPlayerRef.current.getVideoState) {
+				const detailedState = videoPlayerRef.current.getVideoState()
+				videoState = { ...videoState, ...detailedState }
+			}
+
+			console.log('Sending video state:', videoState)
+			window.videoState.sendVideoState(videoState)
+		}
+
+		window.videoState.onGetVideoState(handleGetVideoState)
+
+		return () => {
+			window.videoState.removeGetVideoStateListener(handleGetVideoState)
+		}
+
 	}, [currentVideo])
 
 	const save = async () => {
@@ -203,7 +206,7 @@ export default function App() {
 			<div className="card" style={{ marginTop: 16 }}>
 				<h2 style={{ margin: '0 0 16px 0', fontSize: '1.2em' }}>Video Player</h2>
 				<VideoPlayer
-					ref={videoPlayerRef}
+					videoRef={videoPlayerRef}
 					currentVideo={currentVideo}
 					onVideoEnd={() => setCurrentVideo('')}
 				/>

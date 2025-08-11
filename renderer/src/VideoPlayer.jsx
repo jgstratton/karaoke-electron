@@ -1,7 +1,7 @@
-import React, { useRef, useEffect, useState, forwardRef, useImperativeHandle } from 'react'
+import React, { useRef, useEffect, useState, useImperativeHandle } from 'react'
 
-const VideoPlayer = forwardRef(({ currentVideo, onVideoEnd, isMainPlayer = false, style = {} }, ref) => {
-	const videoRef = useRef(null)
+const VideoPlayer = ({ currentVideo, onVideoEnd, isMainPlayer = false, style = {}, videoRef }) => {
+	const internalVideoRef = useRef(null)
 	const [isPlaying, setIsPlaying] = useState(false)
 	const [currentTime, setCurrentTime] = useState(0)
 	const [duration, setDuration] = useState(0)
@@ -10,18 +10,18 @@ const VideoPlayer = forwardRef(({ currentVideo, onVideoEnd, isMainPlayer = false
 	const [isSyncing, setIsSyncing] = useState(false) // Prevent infinite sync loops
 
 	useEffect(() => {
-		if (currentVideo && videoRef.current) {
+		if (currentVideo && internalVideoRef.current) {
 			console.log('Loading video:', currentVideo)
-			videoRef.current.load()
+			internalVideoRef.current.load()
 			setCurrentTime(0)
 
 			// Mute the preview player (main window), keep sound for main player (separate window)
-			videoRef.current.muted = !isMainPlayer
+			internalVideoRef.current.muted = !isMainPlayer
 		}
 	}, [currentVideo, isMainPlayer])
 
 	useEffect(() => {
-		const video = videoRef.current
+		const video = internalVideoRef.current
 		if (!video) return
 
 		const handleTimeUpdate = () => setCurrentTime(video.currentTime)
@@ -69,7 +69,7 @@ const VideoPlayer = forwardRef(({ currentVideo, onVideoEnd, isMainPlayer = false
 			const handleVideoControl = (event, action, data) => {
 				if (isSyncing) return // Prevent sync loops
 
-				const video = videoRef.current
+				const video = internalVideoRef.current
 				if (!video) return
 
 				console.log('Received video control:', action, data)
@@ -108,36 +108,64 @@ const VideoPlayer = forwardRef(({ currentVideo, onVideoEnd, isMainPlayer = false
 		}
 	}
 
-	// Expose methods to parent component
-	useImperativeHandle(ref, () => ({
-		onGetVideoState: () => ({
+	// Expose methods to parent component via the videoRef prop
+	useImperativeHandle(videoRef, () => ({
+		getVideoState: () => ({
 			currentVideo,
 			currentTime,
 			isPlaying,
 			volume,
 			duration,
 		}),
-		videoRef, // Expose the video ref
+		applyVideoState: (state) => {
+			if (internalVideoRef.current && state) {
+				const video = internalVideoRef.current
+				if (state.currentTime !== undefined) {
+					video.currentTime = state.currentTime
+				}
+				if (state.volume !== undefined) {
+					video.volume = state.volume
+					setVolume(state.volume)
+				}
+				if (state.isPlaying && !isPlaying) {
+					video.play().catch(console.error)
+				} else if (!state.isPlaying && isPlaying) {
+					video.pause()
+				}
+			}
+		},
+		isVideoReady: () => {
+			return internalVideoRef.current && internalVideoRef.current.readyState >= 2 // HAVE_CURRENT_DATA
+		},
+		onVideoReady: (callback) => {
+			if (internalVideoRef.current) {
+				if (internalVideoRef.current.readyState >= 2) {
+					callback()
+				} else {
+					internalVideoRef.current.addEventListener('loadeddata', callback, { once: true })
+				}
+			}
+		},
 	}))
 
 	const togglePlay = () => {
-		if (videoRef.current) {
+		if (internalVideoRef.current) {
 			if (isPlaying) {
-				videoRef.current.pause()
+				internalVideoRef.current.pause()
 				sendControlToOtherPlayers('pause')
 			} else {
-				videoRef.current.play().catch(console.error)
+				internalVideoRef.current.play().catch(console.error)
 				sendControlToOtherPlayers('play')
 			}
 		}
 	}
 
 	const handleSeek = e => {
-		if (videoRef.current && duration) {
+		if (internalVideoRef.current && duration) {
 			const rect = e.currentTarget.getBoundingClientRect()
 			const pos = (e.clientX - rect.left) / rect.width
 			const time = pos * duration
-			videoRef.current.currentTime = time
+			internalVideoRef.current.currentTime = time
 			sendControlToOtherPlayers('seek', { time })
 		}
 	}
@@ -145,8 +173,8 @@ const VideoPlayer = forwardRef(({ currentVideo, onVideoEnd, isMainPlayer = false
 	const handleVolumeChange = e => {
 		const newVolume = parseFloat(e.target.value)
 		setVolume(newVolume)
-		if (videoRef.current) {
-			videoRef.current.volume = newVolume
+		if (internalVideoRef.current) {
+			internalVideoRef.current.volume = newVolume
 			sendControlToOtherPlayers('volume', { volume: newVolume })
 		}
 	}
@@ -192,7 +220,7 @@ const VideoPlayer = forwardRef(({ currentVideo, onVideoEnd, isMainPlayer = false
 		>
 			<div style={{ position: 'relative' }}>
 				<video
-					ref={videoRef}
+					ref={internalVideoRef}
 					style={{
 						width: '100%',
 						height: isMainPlayer ? '100vh' : '400px',
@@ -314,7 +342,7 @@ const VideoPlayer = forwardRef(({ currentVideo, onVideoEnd, isMainPlayer = false
 			</div>
 		</div>
 	)
-})
+}
 
 VideoPlayer.displayName = 'VideoPlayer'
 
