@@ -1,13 +1,14 @@
-import React, { useRef, useEffect, useState, useImperativeHandle } from 'react'
+import { useRef, useEffect, useState, useImperativeHandle } from 'react'
+import { VideoPlayerProps, VideoState } from './types'
 
-const VideoPlayer = ({ currentVideo, onVideoEnd, isMainPlayer = false, style = {}, videoRef }) => {
-	const internalVideoRef = useRef(null)
-	const [isPlaying, setIsPlaying] = useState(false)
-	const [currentTime, setCurrentTime] = useState(0)
-	const [duration, setDuration] = useState(0)
-	const [volume, setVolume] = useState(1)
-	const [showControls, setShowControls] = useState(true)
-	const [isSyncing, setIsSyncing] = useState(false) // Prevent infinite sync loops
+const VideoPlayer = ({ currentVideo, onVideoEnd, isMainPlayer = false, style = {}, videoRef }: VideoPlayerProps) => {
+	const internalVideoRef = useRef<HTMLVideoElement>(null)
+	const [isPlaying, setIsPlaying] = useState<boolean>(false)
+	const [currentTime, setCurrentTime] = useState<number>(0)
+	const [duration, setDuration] = useState<number>(0)
+	const [volume, setVolume] = useState<number>(1)
+	const [showControls, setShowControls] = useState<boolean>(true)
+	const [isSyncing, setIsSyncing] = useState<boolean>(false) // Prevent infinite sync loops
 
 	useEffect(() => {
 		if (currentVideo && internalVideoRef.current) {
@@ -32,7 +33,7 @@ const VideoPlayer = ({ currentVideo, onVideoEnd, isMainPlayer = false, style = {
 			setIsPlaying(false)
 			onVideoEnd && onVideoEnd()
 		}
-		const handleError = (e) => {
+		const handleError = (e: Event) => {
 			console.error('Video error:', e, video.error)
 		}
 		const handleLoadStart = () => {
@@ -66,7 +67,7 @@ const VideoPlayer = ({ currentVideo, onVideoEnd, isMainPlayer = false, style = {
 	// Listen for video control sync commands from other windows
 	useEffect(() => {
 		if (window.videoControls) {
-			const handleVideoControl = (event, action, data) => {
+			const handleVideoControl = (_event: any, action: string, data?: any) => {
 				if (isSyncing) return // Prevent sync loops
 
 				const video = internalVideoRef.current
@@ -102,7 +103,7 @@ const VideoPlayer = ({ currentVideo, onVideoEnd, isMainPlayer = false, style = {
 		}
 	}, [isSyncing])
 
-	const sendControlToOtherPlayers = (action, data) => {
+	const sendControlToOtherPlayers = (action: string, data?: any) => {
 		if (window.videoControls && !isSyncing) {
 			window.videoControls.sendControl(action, data)
 		}
@@ -117,7 +118,7 @@ const VideoPlayer = ({ currentVideo, onVideoEnd, isMainPlayer = false, style = {
 			volume,
 			duration,
 		}),
-		applyVideoState: (state) => {
+		applyVideoState: (state: Partial<VideoState>) => {
 			if (internalVideoRef.current && state) {
 				const video = internalVideoRef.current
 				if (state.currentTime !== undefined) {
@@ -129,13 +130,13 @@ const VideoPlayer = ({ currentVideo, onVideoEnd, isMainPlayer = false, style = {
 				}
 				if (state.isPlaying && !isPlaying) {
 					video.play().catch(console.error)
-				} else if (!state.isPlaying && isPlaying) {
+				} else if (state.isPlaying === false && isPlaying) {
 					video.pause()
 				}
 			}
 		},
 		isVideoReady: () => {
-			return internalVideoRef.current && internalVideoRef.current.readyState >= 2 // HAVE_CURRENT_DATA
+			return !!(internalVideoRef.current && internalVideoRef.current.readyState >= 2) // HAVE_CURRENT_DATA
 		},
 		onVideoReady: (callback) => {
 			if (internalVideoRef.current) {
@@ -152,15 +153,15 @@ const VideoPlayer = ({ currentVideo, onVideoEnd, isMainPlayer = false, style = {
 		if (internalVideoRef.current) {
 			if (isPlaying) {
 				internalVideoRef.current.pause()
-				sendControlToOtherPlayers('pause')
+				sendControlToOtherPlayers('pause', undefined)
 			} else {
 				internalVideoRef.current.play().catch(console.error)
-				sendControlToOtherPlayers('play')
+				sendControlToOtherPlayers('play', undefined)
 			}
 		}
 	}
 
-	const handleSeek = e => {
+	const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
 		if (internalVideoRef.current && duration) {
 			const rect = e.currentTarget.getBoundingClientRect()
 			const pos = (e.clientX - rect.left) / rect.width
@@ -170,7 +171,7 @@ const VideoPlayer = ({ currentVideo, onVideoEnd, isMainPlayer = false, style = {
 		}
 	}
 
-	const handleVolumeChange = e => {
+	const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const newVolume = parseFloat(e.target.value)
 		setVolume(newVolume)
 		if (internalVideoRef.current) {
@@ -179,7 +180,7 @@ const VideoPlayer = ({ currentVideo, onVideoEnd, isMainPlayer = false, style = {
 		}
 	}
 
-	const formatTime = seconds => {
+	const formatTime = (seconds: number): string => {
 		if (!seconds || !isFinite(seconds)) return '0:00'
 		const mins = Math.floor(seconds / 60)
 		const secs = Math.floor(seconds % 60)

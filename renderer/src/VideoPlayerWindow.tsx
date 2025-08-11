@@ -1,17 +1,18 @@
-import React, { useEffect, useState, useRef } from 'react'
-import VideoPlayer from './VideoPlayer.jsx'
+import { useEffect, useState, useRef } from 'react'
+import VideoPlayer from './VideoPlayer'
+import { VideoPlayerRef, VideoState } from './types'
 
 export default function VideoPlayerWindow() {
-	const [currentVideo, setCurrentVideo] = useState('')
-	const videoPlayerRef = useRef(null)
-	const [pendingState, setPendingState] = useState(null) // Store state to apply when video loads
+	const [currentVideo, setCurrentVideo] = useState<string>('')
+	const videoPlayerRef = useRef<VideoPlayerRef>(null)
+	const [pendingState, setPendingState] = useState<VideoState | null>(null) // Store state to apply when video loads
 
 	useEffect(() => {
 		if (!window.videoPlayer) {
 			return;
 		}
 
-		const handlePlayVideo = (event, videoPath) => {
+		const handlePlayVideo = (_event: any, videoPath: string) => {
 			console.log('Video Player Window - Received play video command:', videoPath)
 			setCurrentVideo(videoPath)
 		}
@@ -27,7 +28,7 @@ export default function VideoPlayerWindow() {
 	useEffect(() => {
 		// Listen for video control sync commands
 		if (window.videoControls) {
-			const handleVideoControl = (event, action, data) => {
+			const handleVideoControl = (_event: any, action: string, data?: any) => {
 				console.log('Video Player Window - Received control command:', action, data)
 				// This will be handled by the VideoPlayer component
 			}
@@ -45,7 +46,7 @@ export default function VideoPlayerWindow() {
 		if (currentVideo && pendingState && videoPlayerRef.current) {
 			const applyState = () => {
 				console.log('Video Player Window - Applying pending state:', pendingState)
-				videoPlayerRef.current.applyVideoState(pendingState)
+				videoPlayerRef.current!.applyVideoState(pendingState)
 				setPendingState(null) // Clear pending state
 			}
 
