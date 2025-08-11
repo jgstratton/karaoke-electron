@@ -190,6 +190,7 @@ function createVideoPlayerWindow() {
 		modal: false,
 		title: 'Video Player',
 		backgroundColor: '#000000',
+		autoHideMenuBar: true, // Hide the menu bar in the video player window
 	})
 
 	const devServerURL = process.env.VITE_DEV_SERVER_URL
