@@ -3,5 +3,6 @@ dist/
 release/
 build/
 out/
+reference_files/
 *.log
 .DS_Store

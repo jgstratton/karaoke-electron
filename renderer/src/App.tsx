@@ -1,14 +1,11 @@
 import { useEffect, useState, useRef } from 'react'
-import PouchDB from 'pouchdb-browser'
 import DatabaseExplorer from './DatabaseExplorer.jsx'
 import Settings from './Settings.jsx'
 import MediaBrowser from './MediaBrowser.jsx'
 import VideoPlayer from './VideoPlayer'
 import VideoPlayerWindow from './VideoPlayerWindow'
-import { UserDoc, SettingsDoc, VideoPlayerRef } from './types'
+import { VideoPlayerRef } from './types'
 import './styles.css'
-
-const db = new PouchDB<UserDoc | SettingsDoc>('karaoke-db')
 
 export default function App() {
 	// Check which view to show based on URL params
@@ -31,58 +28,11 @@ export default function App() {
 		return <VideoPlayerWindow />
 	}
 
-	const [name, setName] = useState<string>('...')
-	const [input, setInput] = useState<string>('')
-	const [saving, setSaving] = useState<boolean>(false)
-	const [mediaPath, setMediaPath] = useState<string>('')
 	const [currentVideo, setCurrentVideo] = useState<string>('')
 	const videoPlayerRef = useRef<VideoPlayerRef>(null)
 
 	useEffect(() => {
-		let cancelled = false
-
-		async function load() {
-			try {
-				const doc = await db.get('user') as UserDoc
-				if (!cancelled) {
-					const n = doc.name || 'World'
-					setName(n)
-					setInput(n)
-				}
-			} catch (err: any) {
-				if (err && err.status === 404) {
-					const doc: UserDoc = { _id: 'user', name: 'World' }
-					try {
-						await db.put(doc)
-					} catch { }
-					if (!cancelled) {
-						setName('World')
-						setInput('World')
-					}
-				} else {
-					console.error('Failed to load name', err)
-					if (!cancelled) {
-						setName('World')
-						setInput('World')
-					}
-				}
-			}
-
-			// Load media path from settings
-			try {
-				const settingsDoc = await db.get('settings') as SettingsDoc
-				if (!cancelled && settingsDoc.mediaPath) {
-					setMediaPath(settingsDoc.mediaPath)
-				}
-			} catch (err) {
-				// Settings don't exist yet, that's fine
-			}
-		}
-
-		load()
-		return () => {
-			cancelled = true
-		}
+		// Empty effect for now - can be used for initial data loading later
 	}, [])
 
 	// Listen for video play commands from media browser
@@ -134,83 +84,108 @@ export default function App() {
 
 	}, [currentVideo])
 
-	const save = async () => {
-		setSaving(true)
-		try {
-			let doc: UserDoc
-			try {
-				doc = await db.get('user') as UserDoc
-			} catch (e: any) {
-				if (e.status === 404) {
-					doc = { _id: 'user', name: 'World' }
-				} else {
-					throw e
-				}
-			}
-			doc.name = input.trim() || 'World'
-			await db.put(doc)
-			setName(doc.name)
-		} catch (e) {
-			console.error('Save failed', e)
-		} finally {
-			setSaving(false)
-		}
-	}
-
 	return (
-		<div className="container">
-			<div className="card">
-				<h1 style={{ marginTop: 0 }}>Hello, {name}</h1>
-				<p className="hint">Data source: PouchDB (local)</p>
-
-				<div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
-					<input
-						value={input}
-						onChange={e => setInput(e.target.value)}
-						placeholder="Your name"
-					/>
-					<button onClick={save} disabled={saving}>
-						{saving ? 'Saving…' : 'Save'}
-					</button>
+		<div className="karaoke-main-layout">
+			{/* Left Panel - Singer Rotation */}
+			<div className="singer-rotation-panel">
+				<div className="singer-header">
+					<span>#</span>
+					<span>Singer Rotation</span>
+					<span></span>
+					<span></span>
 				</div>
-
-				{/* Display current media path if set */}
-				{mediaPath && (
-					<div
-						style={{
-							marginTop: 16,
-							padding: 12,
-							background: '#1a1f2e',
-							border: '1px solid #2a2f3a',
-							borderRadius: 6,
-						}}
-					>
-						<p className="hint" style={{ margin: '0 0 4px 0', fontSize: '0.85em' }}>
-							<strong>Media Files Location:</strong>
-						</p>
-						<code style={{ fontSize: '0.8em', wordBreak: 'break-all' }}>
-							{mediaPath}
-						</code>
+				<div className="singer-list">
+					<div className="singer-item current-singer">
+						<span className="singer-avatar">1</span>
+						<span className="singer-name">John Smith</span>
+						<span></span>
+						<span className="show-on-hover">⋯</span>
 					</div>
-				)}
-
-				<p className="hint" style={{ marginTop: 16, fontSize: '0.9em' }}>
-					💡 Use <strong>File → Database Explorer</strong> to explore the database
-					<br />
-					⚙️ Use <strong>File → Settings</strong> to configure media files location
-					<br />
-					🎬 Use <strong>File → Media Browser</strong> to search and browse video files
-				</p>
+					<div className="singer-item">
+						<span className="singer-avatar">2</span>
+						<span className="singer-name">Alice Brown</span>
+						<span></span>
+						<span className="show-on-hover">⋯</span>
+					</div>
+					<div className="singer-item">
+						<span className="singer-avatar">3</span>
+						<span className="singer-name">Mike Johnson</span>
+						<span></span>
+						<span className="show-on-hover">⋯</span>
+					</div>
+					<div className="singer-item">
+						<span className="singer-avatar">4</span>
+						<span className="singer-name">Sarah Davis</span>
+						<span></span>
+						<span className="show-on-hover">⋯</span>
+					</div>
+				</div>
+				<button className="add-singer-btn">+ Add Singer</button>
 			</div>
 
-			{/* Video Player */}
-			<div className="card" style={{ marginTop: 16 }}>
-				<h2 style={{ margin: '0 0 16px 0', fontSize: '1.2em' }}>Video Player</h2>
-				<VideoPlayer
-					videoRef={videoPlayerRef}
-					currentVideo={currentVideo}
-					onVideoEnd={() => setCurrentVideo('')}
-				/>
+			{/* Video Preview - Upper Right */}
+			<div className="video-preview-section">
+				<div className="video-header">
+					<span>Video Preview</span>
+				</div>
+				<div className="video-content">
+					<VideoPlayer
+						videoRef={videoPlayerRef}
+						currentVideo={currentVideo}
+						onVideoEnd={() => setCurrentVideo('')}
+						style={{
+							width: '100%',
+							height: '100%',
+						}}
+					/>
+				</div>
+			</div>
+
+			{/* Song Queue - Lower Right */}
+			<div className="song-queue-section">
+				<div className="queue-header">
+					<span>#</span>
+					<span>Singer</span>
+					<span>Song</span>
+					<span>Title</span>
+					<span>Status</span>
+					<span></span>
+				</div>
+				<div className="queue-list">
+					<div className="queue-item current-song">
+						<span className="queue-position">1</span>
+						<span className="queue-singer">John Smith</span>
+						<span></span>
+						<span className="song-title">Sweet Caroline</span>
+						<span className="song-status">Now Playing</span>
+						<span className="show-on-hover">⋯</span>
+					</div>
+					<div className="queue-item">
+						<span className="queue-position">2</span>
+						<span className="queue-singer">Alice Brown</span>
+						<span></span>
+						<span className="song-title">Don't Stop Believin'</span>
+						<span className="song-status">Queued</span>
+						<span className="show-on-hover">⋯</span>
+					</div>
+					<div className="queue-item">
+						<span className="queue-position">3</span>
+						<span className="queue-singer">Mike Johnson</span>
+						<span></span>
+						<span className="song-title">Bohemian Rhapsody</span>
+						<span className="song-status">Queued</span>
+						<span className="show-on-hover">⋯</span>
+					</div>
+					<div className="queue-item">
+						<span className="queue-position">4</span>
+						<span className="queue-singer">Sarah Davis</span>
+						<span></span>
+						<span className="song-title">I Want It That Way</span>
+						<span className="song-status">Queued</span>
+						<span className="show-on-hover">⋯</span>
+					</div>
+				</div>
+				<button className="manage-queue-btn">Manage Queue</button>
 			</div>
 		</div>
 	)
