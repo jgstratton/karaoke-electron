@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react'
-import VideoPlayer from './VideoPlayer'
-import { VideoPlayerRef, VideoState } from './types'
+import VideoPlayer from '../../VideoPlayer'
+import { VideoPlayerRef, VideoState } from '../../types'
 
 export default function VideoPlayerWindow() {
 	const [currentVideo, setCurrentVideo] = useState<string>('')
