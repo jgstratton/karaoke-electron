@@ -7,7 +7,6 @@ const VideoPlayer = ({ currentVideo, onVideoEnd, isMainPlayer = false, style = {
 	const [currentTime, setCurrentTime] = useState<number>(0)
 	const [duration, setDuration] = useState<number>(0)
 	const [volume, setVolume] = useState<number>(1)
-	const [showControls, setShowControls] = useState<boolean>(true)
 	const [isSyncing, setIsSyncing] = useState<boolean>(false) // Prevent infinite sync loops
 
 	useEffect(() => {
@@ -151,47 +150,32 @@ const VideoPlayer = ({ currentVideo, onVideoEnd, isMainPlayer = false, style = {
 				}
 			}
 		},
-	}))
-
-	const togglePlay = () => {
-		if (internalVideoRef.current) {
-			if (isPlaying) {
-				internalVideoRef.current.pause()
-				sendControlToOtherPlayers('pause', undefined)
-			} else {
+		play: () => {
+			if (internalVideoRef.current) {
 				internalVideoRef.current.play().catch(console.error)
 				sendControlToOtherPlayers('play', undefined)
 			}
-		}
-	}
-
-	const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
-		if (internalVideoRef.current && duration) {
-			const rect = e.currentTarget.getBoundingClientRect()
-			const pos = (e.clientX - rect.left) / rect.width
-			const time = pos * duration
-			internalVideoRef.current.currentTime = time
-			sendControlToOtherPlayers('seek', { time })
-		}
-	}
-
-	const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		const newVolume = parseFloat(e.target.value)
-		setVolume(newVolume)
-		if (internalVideoRef.current) {
-			internalVideoRef.current.volume = newVolume
-			sendControlToOtherPlayers('volume', { volume: newVolume })
-		}
-	}
-
-	const formatTime = (seconds: number): string => {
-		if (!seconds || !isFinite(seconds)) return '0:00'
-		const mins = Math.floor(seconds / 60)
-		const secs = Math.floor(seconds % 60)
-		return `${mins}:${secs.toString().padStart(2, '0')}`
-	}
-
-	const progress = duration ? (currentTime / duration) * 100 : 0
+		},
+		pause: () => {
+			if (internalVideoRef.current) {
+				internalVideoRef.current.pause()
+				sendControlToOtherPlayers('pause', undefined)
+			}
+		},
+		setVolume: (newVolume: number) => {
+			if (internalVideoRef.current) {
+				internalVideoRef.current.volume = newVolume
+				setVolume(newVolume)
+				sendControlToOtherPlayers('volume', { volume: newVolume })
+			}
+		},
+		seekTo: (time: number) => {
+			if (internalVideoRef.current) {
+				internalVideoRef.current.currentTime = time
+				sendControlToOtherPlayers('seek', { time })
+			}
+		},
+	}))
 
 	if (!currentVideo) {
 		return (
@@ -220,15 +204,13 @@ const VideoPlayer = ({ currentVideo, onVideoEnd, isMainPlayer = false, style = {
 				overflow: 'hidden',
 				...style,
 			}}
-			onMouseEnter={() => !isMainPlayer && setShowControls(true)}
-			onMouseLeave={() => !isMainPlayer && setShowControls(false)}
 		>
 			<div style={{ position: 'relative' }}>
 				<video
 					ref={internalVideoRef}
 					style={{
 						width: '100%',
-						height: isMainPlayer ? '100vh' : '400px',
+						height: isMainPlayer ? '100vh' : '250px',
 						objectFit: 'contain',
 						background: '#000',
 					}}
@@ -241,96 +223,6 @@ const VideoPlayer = ({ currentVideo, onVideoEnd, isMainPlayer = false, style = {
 					)}
 					Your browser does not support the video tag.
 				</video>
-
-				{/* Custom Controls Overlay - Only show on preview (main window), not on main player window */}
-				{showControls && !isMainPlayer && (
-					<div
-						style={{
-							position: 'absolute',
-							bottom: 0,
-							left: 0,
-							right: 0,
-							background:
-								'linear-gradient(transparent, rgba(0,0,0,0.7))',
-							padding: '20px 16px 16px',
-						}}
-					>
-						{/* Progress Bar */}
-						<div
-							style={{
-								width: '100%',
-								height: '6px',
-								background: 'rgba(255,255,255,0.3)',
-								borderRadius: '3px',
-								marginBottom: '12px',
-								cursor: 'pointer',
-							}}
-							onClick={handleSeek}
-						>
-							<div
-								style={{
-									width: `${progress}%`,
-									height: '100%',
-									background: '#006adc',
-									borderRadius: '3px',
-									transition: 'width 0.1s',
-								}}
-							/>
-						</div>
-
-						{/* Control Buttons */}
-						<div
-							style={{
-								display: 'flex',
-								alignItems: 'center',
-								gap: '12px',
-								color: 'white',
-							}}
-						>
-							<button
-								onClick={togglePlay}
-								style={{
-									background: 'rgba(255,255,255,0.2)',
-									color: 'white',
-									border: 'none',
-									borderRadius: '50%',
-									width: '40px',
-									height: '40px',
-									display: 'flex',
-									alignItems: 'center',
-									justifyContent: 'center',
-									cursor: 'pointer',
-									fontSize: '16px',
-								}}
-							>
-								{isPlaying ? '⏸️' : '▶️'}
-							</button>
-
-							<span style={{ fontSize: '14px', minWidth: '80px' }}>
-								{formatTime(currentTime)} / {formatTime(duration)}
-							</span>
-
-							<div style={{ flex: 1 }} />
-
-							<div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-								<span style={{ fontSize: '14px' }}>🔊</span>
-								<input
-									type="range"
-									min="0"
-									max="1"
-									step="0.1"
-									value={volume}
-									onChange={handleVolumeChange}
-									style={{
-										width: '80px',
-										accentColor: '#006adc',
-										padding: 0
-									}}
-								/>
-							</div>
-						</div>
-					</div>
-				)}
 			</div>
 
 			{/* Video Info */}

@@ -34,6 +34,10 @@ export interface VideoPlayerRef {
 	applyVideoState: (state: Partial<VideoState>) => void
 	isVideoReady: () => boolean
 	onVideoReady: (callback: () => void) => void
+	play: () => void
+	pause: () => void
+	setVolume: (volume: number) => void
+	seekTo: (time: number) => void
 }
 
 export interface VideoPlayerProps {
@@ -59,6 +63,7 @@ export interface ElectronAPI {
 	videoPlayer: {
 		onPlayVideo: (callback: (event: any, videoPath: string) => void) => void
 		removePlayVideoListener: (callback: (event: any, videoPath: string) => void) => void
+		toggleFullscreen: () => Promise<void>
 	}
 	videoControls: {
 		sendControl: (action: string, data?: any) => Promise<boolean>
@@ -74,5 +79,31 @@ export interface ElectronAPI {
 }
 
 declare global {
-	interface Window extends ElectronAPI { }
+	interface Window {
+		env: {
+			isElectron: boolean;
+			getUrlParams: () => URLSearchParams;
+		};
+		fileSystem: {
+			selectFolder: () => Promise<string | null>;
+			validatePath: (path: string) => Promise<boolean>;
+			scanMediaFiles: (folderPath: string) => Promise<MediaFile[]>;
+		};
+		videoPlayer: {
+			playVideo: (videoPath: string) => Promise<boolean>;
+			onPlayVideo: (callback: (event: any, videoPath: string) => void) => void;
+			removePlayVideoListener: (callback: (event: any, videoPath: string) => void) => void;
+			toggleFullscreen: () => Promise<void>;
+		};
+		videoControls: {
+			sendControl: (action: string, data?: any) => Promise<boolean>;
+			onVideoControl: (callback: (event: any, action: string, data?: any) => void) => void;
+			removeVideoControlListener: (callback: (event: any, action: string, data?: any) => void) => void;
+		};
+		videoState: {
+			onGetVideoState: (callback: () => void) => void;
+			sendVideoState: (state: VideoState) => void;
+			removeGetVideoStateListener: (callback: () => void) => void;
+		};
+	}
 }

@@ -41,12 +41,12 @@ body {
 .karaoke-main-layout {
 	display: grid;
 	grid-gap: 10px;
-	grid-template-columns: 25% auto;
+	grid-template-columns: 25% auto 35%;
 	grid-template-rows: auto auto 1fr;
 	grid-template-areas:
-		"header header"
-		"singerList videoPreview"
-		"singerList songQueue";
+		"header header header"
+		"singerList videoControls videoPreview"
+		"singerList songQueue songQueue";
 	height: 100vh;
 	width: 100vw;
 	background-color: rgba(0, 0, 0, 0.8);
@@ -292,6 +292,137 @@ body {
 	display: grid;
 	grid-template-rows: auto 1fr;
 	box-shadow: none;
+}
+
+/* Video Controls Section - Upper Middle */
+.video-controls-section {
+	grid-area: videoControls;
+	background-color: rgba(18, 18, 18, 0.95);
+	border-radius: 0.375rem;
+	border: none;
+	padding: 0;
+	display: grid;
+	grid-template-rows: auto 1fr;
+	box-shadow: none;
+}
+
+.video-controls-header {
+	display: grid;
+	grid-gap: 3px;
+	padding: 6px;
+	color: #6c757d;
+	border-bottom: 1px solid rgb(75, 75, 75);
+	font-size: 1rem;
+	grid-template-columns: 1fr;
+}
+
+.video-controls-content {
+	padding: 12px;
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.video-controls-group {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.video-controls-group h4 {
+	margin: 0;
+	color: white;
+	font-size: 0.9rem;
+	font-weight: 600;
+	border-bottom: 1px solid rgb(75, 75, 75);
+	padding-bottom: 6px;
+}
+
+.video-controls-row {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.video-control-btn {
+	background: #007bff;
+	color: white;
+	border: none;
+	padding: 6px 12px;
+	border-radius: 0.25rem;
+	font-size: 0.8rem;
+	cursor: pointer;
+	transition: background-color 0.2s;
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.video-control-btn:hover {
+	background: #0056b3;
+}
+
+.video-control-btn:disabled {
+	background: #6c757d;
+	cursor: not-allowed;
+}
+
+.video-control-btn.secondary {
+	background: #6c757d;
+}
+
+.video-control-btn.secondary:hover {
+	background: #5a6268;
+}
+
+.video-progress-container {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	position: relative;
+}
+
+.video-progress-bar {
+	width: 100%;
+	height: 6px;
+	background: rgba(255, 255, 255, 0.3);
+	border-radius: 3px;
+	cursor: pointer;
+	overflow: hidden;
+	transition: height 0.2s ease;
+}
+
+.video-progress-bar:hover {
+	height: 8px;
+	background: rgba(255, 255, 255, 0.4);
+}
+
+.video-progress-fill {
+	height: 100%;
+	background: #007bff;
+	border-radius: 3px;
+	transition: width 0.1s, background-color 0.2s ease;
+}
+
+.video-progress-bar:hover .video-progress-fill {
+	background: #0056b3;
+}
+
+.video-time-display {
+	color: #a0a7b4;
+	font-size: 0.875rem;
+	font-family: monospace;
+}
+
+.video-volume-container {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.video-volume-slider {
+	width: 80px;
+	accent-color: #007bff;
 }
 
 .video-preview-section h3 {
