@@ -24,8 +24,13 @@
 		/* Allow JS during transition */
 		"allowJs": true,
 		"checkJs": false,
-		"baseUrl": ".",
-		"paths": {}
+		"baseUrl": "./renderer",
+		"paths": {
+			"@/*": ["src/*"],
+			"@/store/*": ["src/store/*"],
+			"@/components/*": ["src/components/*"],
+			"@/types/*": ["src/types/*"]
+		}
 	},
 	"include": [
 		"renderer/src/**/*"

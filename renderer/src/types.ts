@@ -40,14 +40,6 @@ export interface VideoPlayerRef {
 	seekTo: (time: number) => void
 }
 
-export interface VideoPlayerProps {
-	videoRef?: React.RefObject<VideoPlayerRef | null>
-	currentVideo: string
-	onVideoEnd: () => void
-	isMainPlayer?: boolean
-	style?: React.CSSProperties
-}
-
 // Electron API types
 export interface ElectronAPI {
 	env: {
