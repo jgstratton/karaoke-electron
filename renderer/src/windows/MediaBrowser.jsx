@@ -120,7 +120,7 @@ export default function MediaBrowser() {
 		}
 	}
 
-	const playVideo = filePath => window.videoPlayer.playVideo(filePath);
+	const playVideo = filePath => window.videoPlayer.startNewVideo(filePath);
 
 	if (loading) {
 		return (

@@ -14,18 +14,19 @@ export interface VideoPlayerProps {
 
 const VideoPlayer = ({ currentVideo, onVideoEnd, isPlaying, startingTime, volume, onTimeUpdate, onVideoReady, cssHeight}: VideoPlayerProps) => {
 	const internalVideoRef = useRef<HTMLVideoElement>(null)
+	const sourceRef = useRef<HTMLSourceElement>(null)
 
-	// Its' up to the calling component to manage state changes, so the video player itself will always react to any changes in props
 	useEffect(() => {
-		if (!currentVideo) {
-			internalVideoRef.current?.pause()
-			return;
-		}
-
 		const playerRef = internalVideoRef.current;
-		if (!playerRef) {
-			return;
-		}
+		if (!playerRef) return;
+
+		playerRef.volume = volume;
+
+	}, [volume])
+
+	useEffect(() => {
+		const playerRef = internalVideoRef.current;
+		if (!playerRef) return;
 
 		if (isPlaying) {
 			playerRef.play();
@@ -33,9 +34,28 @@ const VideoPlayer = ({ currentVideo, onVideoEnd, isPlaying, startingTime, volume
 			playerRef.pause();
 		}
 
-		playerRef.currentTime = startingTime;
-		playerRef.volume = volume;
-	}, [currentVideo, isPlaying, startingTime, volume])
+	}, [isPlaying])
+
+	useEffect(() => {
+		const playerRef = internalVideoRef.current;
+		if (!playerRef) return;
+
+		// listen for changes to current video
+		sourceRef.current?.setAttribute('src', currentVideo);
+		playerRef.load();
+		if (isPlaying) {
+			playerRef.play();
+		}
+
+	}, [currentVideo])
+
+	useEffect(() => {
+		const playerRef = internalVideoRef.current;
+		if (!playerRef) return;
+		// listen for changes to startingTime
+			playerRef.currentTime = startingTime;
+
+	}, [startingTime])
 
 	useEffect(() => {
 		const video = internalVideoRef.current
@@ -60,25 +80,23 @@ const VideoPlayer = ({ currentVideo, onVideoEnd, isPlaying, startingTime, volume
 		}
 	}, [onVideoEnd, onTimeUpdate, onVideoReady])
 
-	if (!currentVideo) {
-		return (
-			<div
-				style={{
-					display: 'flex',
-					alignItems: 'center',
-					justifyContent: 'center',
-					height: '400px',
-					background: '#0a0d12',
-					borderRadius: '8px',
-					border: '1px solid #2a2f3a',
-				}}
-			>
-				<p className="hint">No video selected. Use the Media Browser to choose a video.</p>
-			</div>
-		)
-	}
-
 	return (
+		<>
+			{!currentVideo && (
+				<div
+					style={{
+						display: 'flex',
+						alignItems: 'center',
+						justifyContent: 'center',
+						height: '400px',
+						background: '#0a0d12',
+						borderRadius: '8px',
+						border: '1px solid #2a2f3a',
+					}}
+				>
+					<p className="hint">No video selected. Use the Media Browser to choose a video.</p>
+				</div>
+			)}
 		<div
 			style={{
 				background: '#0a0d12',
@@ -97,12 +115,11 @@ const VideoPlayer = ({ currentVideo, onVideoEnd, isPlaying, startingTime, volume
 					controls={false}
 					preload="metadata"
 				>
-					{currentVideo && (
-						<source src={currentVideo} />
-					)}
+					<source ref={sourceRef} src={currentVideo} />
 				</video>
 			</div>
 		</div>
+		</>
 	)
 }
 

@@ -1,11 +1,10 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState } from 'react'
 import VideoPlayer from '../../VideoPlayer'
-import { VideoPlayerRef, VideoState } from '../../types'
 
 export default function VideoPlayerWindow() {
 	const [currentVideo, setCurrentVideo] = useState<string>('')
-	const videoPlayerRef = useRef<VideoPlayerRef>(null)
-	const [pendingState, setPendingState] = useState<VideoState | null>(null) // Store state to apply when video loads
+	const [isPlaying, setIsPlaying] = useState<boolean>(false)
+	const [volume, setVolume] = useState<number>(1)
 
 	useEffect(() => {
 		if (!window.videoPlayer) {
@@ -17,47 +16,34 @@ export default function VideoPlayerWindow() {
 			setCurrentVideo(videoPath)
 		}
 
-		window.videoPlayer.onPlayVideo(handlePlayVideo)
+		const onPauseVideo = (_event: any) => {
+			console.log('Video Player Window - Received pause video command')
+			setIsPlaying(false)
+		}
+
+		const onUnpauseVideo = (_event: any) => {
+			console.log('Video Player Window - Received unpause video command')
+			setIsPlaying(true)
+		}
+
+		const onVolumeChange = (_event: any, newVolume: number) => {
+			console.log('Video Player Window - Received volume change command:', newVolume)
+			setVolume(newVolume)
+		}
+
+		window.videoPlayer.onStartNewVideo(handlePlayVideo)
+		window.videoPlayer.onPauseVideo(onPauseVideo)
+		window.videoPlayer.onUnpauseVideo(onUnpauseVideo)
+		window.videoPlayer.onVolumeChange(onVolumeChange)
 
 		return () => {
-			window.videoPlayer.removePlayVideoListener(handlePlayVideo)
+			window.videoPlayer.removeStartNewVideoListener(handlePlayVideo)
+			window.videoPlayer.removePauseVideoListener(onPauseVideo)
+			window.videoPlayer.removeUnpauseVideoListener(onUnpauseVideo)
+			window.videoPlayer.removeVolumeChangeListener(onVolumeChange)
 		}
 
 	}, [])
-
-	useEffect(() => {
-		// Listen for video control sync commands
-		if (window.videoControls) {
-			const handleVideoControl = (_event: any, action: string, data?: any) => {
-				console.log('Video Player Window - Received control command:', action, data)
-				// This will be handled by the VideoPlayer component
-			}
-
-			window.videoControls.onVideoControl(handleVideoControl)
-
-			return () => {
-				window.videoControls.removeVideoControlListener(handleVideoControl)
-			}
-		}
-	}, [])
-
-	// Apply pending state when video loads
-	useEffect(() => {
-		if (currentVideo && pendingState && videoPlayerRef.current) {
-			const applyState = () => {
-				console.log('Video Player Window - Applying pending state:', pendingState)
-				videoPlayerRef.current!.applyVideoState(pendingState)
-				setPendingState(null) // Clear pending state
-			}
-
-			// Wait for video to load before applying state
-			if (videoPlayerRef.current.isVideoReady()) {
-				applyState()
-			} else {
-				videoPlayerRef.current.onVideoReady(applyState)
-			}
-		}
-	}, [currentVideo, pendingState])
 
 	return (
 		<div
@@ -74,14 +60,15 @@ export default function VideoPlayerWindow() {
 			{currentVideo ? (
 				<div style={{ width: '100%', height: '100%' }}>
 					<VideoPlayer
-						videoRef={videoPlayerRef}
 						currentVideo={currentVideo}
 						onVideoEnd={() => setCurrentVideo('')}
 						isMainPlayer={true}
-						style={{
-							width: '100%',
-							height: '100%',
-						}}
+						isPlaying={isPlaying}
+						startingTime={0}
+						volume={volume}
+						cssHeight={"100vh"}
+						onTimeUpdate={(currentTime) => window.videoPlayer.updateCurrentTime(currentTime)}
+						onVideoReady={(duration) => window.videoPlayer.updateDuration(duration)}
 					/>
 				</div>
 			) : (

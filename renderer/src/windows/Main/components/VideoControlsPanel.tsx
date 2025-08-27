@@ -2,6 +2,7 @@ import { RootState } from "@/windows/main/store";
 import { useAppDispatch } from "@/windows/main/store/hooks";
 import { play, pause, setVolume } from "@/windows/main/store/slices/playerSlice";
 import { useSelector } from "react-redux";
+import PlayerMediator from "@/mediators/PlayerMediator";
 
 // todo, use mediator that will send info to other windows and update state
 export default function VideoControlsPanel() {
@@ -33,7 +34,7 @@ export default function VideoControlsPanel() {
 						<button
 							className="video-control-btn"
 							onClick={() => {
-								playerState.isPlaying ? pause() : play();
+								playerState.isPlaying ? PlayerMediator.Pause() : PlayerMediator.Unpause();
 							}}
 						>
 							{playerState.isPlaying ? '⏸️ Pause' : '▶️ Play'}

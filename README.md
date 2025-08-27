@@ -50,15 +50,20 @@ On Windows, you'll get an `.exe` installer in `release/`. Distribute that file t
 ```
 .
 ├─ electron/
-│  ├─ main.js         # Electron main process (app entry)
-│  └─ preload.js      # Preload script, isolates context for security
+│  ├─ main.ts         # Electron main process (TypeScript)
+│  ├─ preload.ts      # Preload script (TypeScript)
+│  └─ preload-types.ts # Type definitions for Electron API
+├─ dist-electron/     # Compiled Electron files (generated)
 ├─ renderer/
 │  ├─ index.html      # Vite entry HTML
 │  └─ src/
 │     ├─ main.jsx     # React entry
+│     ├─ types.ts     # TypeScript type definitions
 │     └─ App.jsx      # UI + PouchDB usage (reads name)
 ├─ dist/              # Built renderer (generated)
 ├─ release/           # Packaged installers (generated)
+├─ tsconfig.json      # TypeScript config for renderer
+├─ tsconfig.node.json # TypeScript config for electron main process
 ├─ vite.config.mjs    # Vite config (root=renderer, outDir=dist)
 └─ package.json       # Scripts, deps, electron-builder config
 ```

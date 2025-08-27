@@ -1,16 +1,17 @@
-const { app, BrowserWindow, Menu, ipcMain, dialog, protocol } = require('electron')
-const path = require('path')
-const url = require('url')
-const fs = require('fs')
+import { app, BrowserWindow, Menu, ipcMain, dialog, protocol } from 'electron'
+import * as path from 'path'
+import * as url from 'url'
+import * as fs from 'fs'
+import type { MediaFile } from './preload-types'
 
-let mainWindow
-let dbExplorerWindow
-let settingsWindow
-let mediaBrowserWindow
-let videoPlayerWindow
+let mainWindow: BrowserWindow | null = null
+let dbExplorerWindow: BrowserWindow | null = null
+let settingsWindow: BrowserWindow | null = null
+let mediaBrowserWindow: BrowserWindow | null = null
+let videoPlayerWindow: BrowserWindow | null = null
 
-function createMenu() {
-	const template = [
+function createMenu(): void {
+	const template: Electron.MenuItemConstructorOptions[] = [
 		{
 			label: 'File',
 			submenu: [
@@ -84,7 +85,7 @@ function createMenu() {
 	Menu.setApplicationMenu(menu)
 }
 
-function createDbExplorerWindow() {
+function createDbExplorerWindow(): void {
 	dbExplorerWindow = new BrowserWindow({
 		width: 600,
 		height: 500,
@@ -94,7 +95,7 @@ function createDbExplorerWindow() {
 			nodeIntegration: false,
 			sandbox: false,
 		},
-		parent: mainWindow,
+		parent: mainWindow || undefined,
 		modal: false,
 		title: 'Database Explorer',
 	})
@@ -114,7 +115,7 @@ function createDbExplorerWindow() {
 	})
 }
 
-function createSettingsWindow() {
+function createSettingsWindow(): void {
 	settingsWindow = new BrowserWindow({
 		width: 500,
 		height: 400,
@@ -124,7 +125,7 @@ function createSettingsWindow() {
 			nodeIntegration: false,
 			sandbox: false,
 		},
-		parent: mainWindow,
+		parent: mainWindow || undefined,
 		modal: true,
 		title: 'Settings',
 		resizable: false,
@@ -145,7 +146,7 @@ function createSettingsWindow() {
 	})
 }
 
-function createMediaBrowserWindow() {
+function createMediaBrowserWindow(): void {
 	mediaBrowserWindow = new BrowserWindow({
 		width: 900,
 		height: 700,
@@ -155,7 +156,7 @@ function createMediaBrowserWindow() {
 			nodeIntegration: false,
 			sandbox: false,
 		},
-		parent: mainWindow,
+		parent: mainWindow || undefined,
 		modal: false,
 		title: 'Media Browser',
 	})
@@ -175,7 +176,7 @@ function createMediaBrowserWindow() {
 	})
 }
 
-function createVideoPlayerWindow() {
+function createVideoPlayerWindow(): void {
 	videoPlayerWindow = new BrowserWindow({
 		width: 1200,
 		height: 800,
@@ -186,11 +187,11 @@ function createVideoPlayerWindow() {
 			sandbox: false,
 			webSecurity: false, // Allow loading of local resources through custom protocol
 		},
-		parent: mainWindow,
+		parent: mainWindow || undefined,
 		modal: false,
 		title: 'Video Player',
 		backgroundColor: '#000000',
-		autoHideMenuBar: true, // Hide the menu bar in the video player window
+		autoHideMenuBar: false, // Hide the menu bar in the video player window
 	})
 
 	const devServerURL = process.env.VITE_DEV_SERVER_URL
@@ -209,7 +210,9 @@ function createVideoPlayerWindow() {
 }
 
 // IPC Handlers
-ipcMain.handle('select-folder', async () => {
+ipcMain.handle('select-folder', async (): Promise<string | null> => {
+	if (!mainWindow) return null
+
 	const result = await dialog.showOpenDialog(mainWindow, {
 		properties: ['openDirectory'],
 		title: 'Select Media Files Folder',
@@ -221,8 +224,7 @@ ipcMain.handle('select-folder', async () => {
 	return null
 })
 
-ipcMain.handle('validate-path', async (event, folderPath) => {
-	const fs = require('fs')
+ipcMain.handle('validate-path', async (event: Electron.IpcMainInvokeEvent, folderPath: string): Promise<boolean> => {
 	try {
 		const stats = await fs.promises.stat(folderPath)
 		return stats.isDirectory()
@@ -231,10 +233,7 @@ ipcMain.handle('validate-path', async (event, folderPath) => {
 	}
 })
 
-ipcMain.handle('scan-media-files', async (event, folderPath) => {
-	const fs = require('fs')
-	const path = require('path')
-
+ipcMain.handle('scan-media-files', async (event: Electron.IpcMainInvokeEvent, folderPath: string): Promise<MediaFile[]> => {
 	if (!folderPath) {
 		return []
 	}
@@ -255,8 +254,8 @@ ipcMain.handle('scan-media-files', async (event, folderPath) => {
 			'.3gp',
 		]
 
-		async function scanDirectory(dirPath, relativePath = '') {
-			const items = []
+		async function scanDirectory(dirPath: string, relativePath = ''): Promise<MediaFile[]> {
+			const items: MediaFile[] = []
 			const entries = await fs.promises.readdir(dirPath, { withFileTypes: true })
 
 			for (const entry of entries) {
@@ -295,9 +294,9 @@ ipcMain.handle('scan-media-files', async (event, folderPath) => {
 })
 
 // IPC handler for playing videos
-ipcMain.handle('play-video', async (event, videoPath) => {
+ipcMain.on('play-video', (event: Electron.IpcMainEvent, videoPath: string) => {
 	if (!mainWindow) {
-		return false;
+		return;
 	}
 
 	// Convert the file path to a safe protocol URL with proper encoding
@@ -320,14 +319,38 @@ ipcMain.handle('play-video', async (event, videoPath) => {
 
 	// Focus the main window
 	mainWindow.focus()
+})
 
-	return true
+const sendPlayerEvents = (eventName:string) => {
+	if (!mainWindow) {
+		return;
+	}
 
+	// Send the pause command to the main window
+	mainWindow.webContents.send(eventName)
+
+	// Also send to video player window if it's open
+	if (videoPlayerWindow) {
+		videoPlayerWindow.webContents.send(eventName)
+	}
+}
+
+ipcMain.on('pause-video', (event: Electron.IpcMainEvent) => sendPlayerEvents('pause-video'))
+ipcMain.on('unpause-video', (event: Electron.IpcMainEvent) => sendPlayerEvents('unpause-video'))
+
+
+// IPC handler for getting current video state
+ipcMain.handle('get-current-video-state', async (event: Electron.IpcMainInvokeEvent): Promise<any> => {
+	// This will be implemented when video state management is added
+	// For now, return null to indicate no current state
+	return null
 })
 
 // IPC handlers for video sync between main window and video player window
-ipcMain.handle('video-control', async (event, action, data) => {
-	const windows = [mainWindow, videoPlayerWindow].filter(w => w && !w.webContents.isDestroyed())
+ipcMain.handle('video-control', async (event: Electron.IpcMainInvokeEvent, action: string, data?: any): Promise<boolean> => {
+	const windows = [mainWindow, videoPlayerWindow].filter((w): w is BrowserWindow =>
+		w !== null && !w.webContents.isDestroyed()
+	)
 
 	// Send the control action to all video windows except the sender
 	windows.forEach(window => {
@@ -339,7 +362,46 @@ ipcMain.handle('video-control', async (event, action, data) => {
 	return true
 })
 
-function createWindow() {
+// IPC handlers for video pause/unpause
+ipcMain.handle('pause-video', async (event: Electron.IpcMainInvokeEvent): Promise<boolean> => {
+	const windows = [mainWindow, videoPlayerWindow].filter((w): w is BrowserWindow =>
+		w !== null && !w.webContents.isDestroyed()
+	)
+
+	// Send the pause command to all video windows except the sender
+	windows.forEach(window => {
+		if (window.webContents !== event.sender) {
+			window.webContents.send('pause-video')
+		}
+	})
+
+	return true
+})
+
+ipcMain.handle('unpause-video', async (event: Electron.IpcMainInvokeEvent): Promise<boolean> => {
+	const windows = [mainWindow, videoPlayerWindow].filter((w): w is BrowserWindow =>
+		w !== null && !w.webContents.isDestroyed()
+	)
+
+	// Send the unpause command to all video windows except the sender
+	windows.forEach(window => {
+		if (window.webContents !== event.sender) {
+			window.webContents.send('unpause-video')
+		}
+	})
+
+	return true
+})
+
+// IPC handler for toggling fullscreen
+ipcMain.handle('toggle-fullscreen', async (event: Electron.IpcMainInvokeEvent): Promise<void> => {
+	const senderWindow = BrowserWindow.fromWebContents(event.sender)
+	if (senderWindow) {
+		senderWindow.setFullScreen(!senderWindow.isFullScreen())
+	}
+})
+
+function createWindow(): void {
 	mainWindow = new BrowserWindow({
 		width: 1000,
 		height: 700,
@@ -393,6 +455,7 @@ app.whenReady().then(() => {
 		if (BrowserWindow.getAllWindows().length === 0) createWindow()
 	})
 })
+
 app.on('window-all-closed', () => {
 	if (process.platform !== 'darwin') app.quit()
 })
