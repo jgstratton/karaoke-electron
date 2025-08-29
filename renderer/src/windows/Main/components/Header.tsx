@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import styles from './Header.module.css'
 
 interface HeaderProps {
 	onOpenSettings: () => void
@@ -12,28 +13,28 @@ export default function Header({ onOpenSettings, onViewReduxStore, onOpenDatabas
 
 	return (
 		<>
-			<div className="karaoke-logo">
-				<img src="/src/assets/logo.png" alt="Karaoke Logo" />
+			<div className={styles.logo}>
+				<img src="/src/assets/logo.png" alt="Karaoke Logo" className={styles.logoImage} />
 				<div>
-					<h1 className="karaoke-title">Karaoke Party</h1>
-					<p className="karaoke-subtitle">Professional Karaoke System</p>
+					<h1 className={styles.title}>Karaoke Party</h1>
+					<p className={styles.subtitle}>Professional Karaoke System</p>
 				</div>
 			</div>
 
-			<div className="header-menu">
-				<div className="menu-item">
+			<div className={styles.menu}>
+				<div className={styles.menuItem}>
 					<span
-						className="menu-label"
+						className={styles.menuLabel}
 						onClick={() => setShowToolsMenu(!showToolsMenu)}
 						onBlur={() => setTimeout(() => setShowToolsMenu(false), 150)}
 						tabIndex={0}
 					>
-						Tools <i className="fas fa-angle-down dropdown-arrow"></i>
+						Tools <i className={`fas fa-angle-down ${styles.dropdownArrow}`}></i>
 					</span>
 					{showToolsMenu && (
-						<div className="dropdown-menu">
+						<div className={styles.dropdownMenu}>
 							<div
-								className="dropdown-item"
+								className={styles.dropdownItem}
 								onClick={() => {
 									onOpenSettings()
 									setShowToolsMenu(false)
@@ -42,7 +43,7 @@ export default function Header({ onOpenSettings, onViewReduxStore, onOpenDatabas
 								Settings
 							</div>
 							<div
-								className="dropdown-item"
+								className={styles.dropdownItem}
 								onClick={() => {
 									onViewReduxStore()
 									setShowToolsMenu(false)
@@ -51,7 +52,7 @@ export default function Header({ onOpenSettings, onViewReduxStore, onOpenDatabas
 								View Redux Store
 							</div>
 							<div
-								className="dropdown-item"
+								className={styles.dropdownItem}
 								onClick={() => {
 									onOpenDatabaseExplorer()
 									setShowToolsMenu(false)
@@ -60,7 +61,7 @@ export default function Header({ onOpenSettings, onViewReduxStore, onOpenDatabas
 								Database Explorer
 							</div>
 							<div
-								className="dropdown-item"
+								className={styles.dropdownItem}
 								onClick={() => {
 									onOpenMediaBrowser()
 									setShowToolsMenu(false)
@@ -73,7 +74,7 @@ export default function Header({ onOpenSettings, onViewReduxStore, onOpenDatabas
 				</div>
 			</div>
 
-			<div className="header-controls">
+			<div className={styles.controls}>
 				<span>Session: Active</span>
 				<span>•</span>
 				<span>Singers: 4</span>
