@@ -1,5 +1,9 @@
 import { ipcRenderer } from "electron"
 
+const EVENT_PAUSE_VIDEO = "pause-video";
+const EVENT_UNPAUSE_VIDEO = "unpause-video";
+const EVENT_SET_VOLUME = "set-volume";
+
 // Video Player API
 export interface IVideoPlayerAPI {
 
@@ -36,9 +40,9 @@ export const VideoPlayerAPI: IVideoPlayerAPI = {
 		console.log("Starting New Video:", videoPath)
 		ipcRenderer.send('play-video', videoPath)
 	},
-	pauseVideo: () => ipcRenderer.send('pause-video'),
-	unpauseVideo: () => ipcRenderer.send('unpause-video'),
-	changeVolume: (volume) => ipcRenderer.send('set-volume', volume),
+	pauseVideo: () => ipcRenderer.send(EVENT_PAUSE_VIDEO),
+	unpauseVideo: () => ipcRenderer.send(EVENT_UNPAUSE_VIDEO),
+	changeVolume: (volume) => ipcRenderer.send(EVENT_SET_VOLUME, volume),
 	updateCurrentTime: (currentTime) => ipcRenderer.send('set-current-time', currentTime),
 	updateDuration: (duration) => ipcRenderer.send('set-duration', duration),
 
@@ -48,13 +52,14 @@ export const VideoPlayerAPI: IVideoPlayerAPI = {
 		ipcRenderer.on('play-video', callback)
 	},
 	onPauseVideo: (callback) => {
-		ipcRenderer.on('pause-video', callback)
+		ipcRenderer.on(EVENT_PAUSE_VIDEO, callback)
 	},
 	onUnpauseVideo: (callback) => {
-		ipcRenderer.on('unpause-video', callback)
+		ipcRenderer.on(EVENT_UNPAUSE_VIDEO, callback)
 	},
 	onVolumeChange: (callback) => {
-		ipcRenderer.on('volume-change', callback)
+		debugger;
+		ipcRenderer.on(EVENT_SET_VOLUME, callback)
 	},
 	onUpdateCurrentTime: (callback) => {
 		ipcRenderer.on('set-current-time', callback)
@@ -68,13 +73,13 @@ export const VideoPlayerAPI: IVideoPlayerAPI = {
 		ipcRenderer.removeListener('play-video', callback)
 	},
 	removePauseVideoListener: (callback) => {
-		ipcRenderer.removeListener('pause-video', callback)
+		ipcRenderer.removeListener(EVENT_PAUSE_VIDEO, callback)
 	},
 	removeUnpauseVideoListener: (callback) => {
-		ipcRenderer.removeListener('unpause-video', callback)
+		ipcRenderer.removeListener(EVENT_UNPAUSE_VIDEO, callback)
 	},
 	removeVolumeChangeListener: (callback) => {
-		ipcRenderer.removeListener('volume-change', callback)
+		ipcRenderer.removeListener(EVENT_SET_VOLUME, callback)
 	},
 	removeUpdateCurrentTimeListener: (callback) => {
 		ipcRenderer.removeListener('set-current-time', callback)

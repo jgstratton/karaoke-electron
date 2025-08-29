@@ -26,6 +26,7 @@ export default function VideoPlayerWindow() {
 			setIsPlaying(true)
 		}
 
+		console.log("adding volume change listener")
 		const onVolumeChange = (_event: any, newVolume: number) => {
 			console.log('Video Player Window - Received volume change command:', newVolume)
 			setVolume(newVolume)

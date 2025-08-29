@@ -98,8 +98,7 @@ export default function VideoControlsPanel() {
 								value={playerState.volume}
 								className="video-volume-slider"
 								onChange={(e) => {
-									const newVolume = parseFloat(e.target.value);
-									dispatch(setVolume(newVolume));
+									PlayerMediator.SetVolume(parseFloat(e.target.value));
 								}}
 							/>
 							<span>{Math.round(playerState.volume * 100)}%</span>

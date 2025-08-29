@@ -1,5 +1,5 @@
 import {store} from '../windows/main/store';
-import { pause, play } from '../windows/main/store/slices/playerSlice';
+import { pause, play, setVolume } from '../windows/main/store/slices/playerSlice';
 
 const PlayerMediator = {
 	Pause: () => {
@@ -9,6 +9,11 @@ const PlayerMediator = {
 	Unpause: () => {
 		store.dispatch(play());
 		window.videoPlayer.unpauseVideo();
+	},
+	SetVolume: (volume: number) => {
+		debugger;
+		store.dispatch(setVolume(volume));
+		window.videoPlayer.changeVolume(volume);
 	}
 }
 
