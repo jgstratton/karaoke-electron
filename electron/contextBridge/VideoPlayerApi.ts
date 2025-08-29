@@ -1,8 +1,8 @@
 import { ipcRenderer } from "electron"
 
-const EVENT_PAUSE_VIDEO = "pause-video";
-const EVENT_UNPAUSE_VIDEO = "unpause-video";
-const EVENT_SET_VOLUME = "set-volume";
+export const EVENT_PAUSE_VIDEO = "pause-video";
+export const EVENT_UNPAUSE_VIDEO = "unpause-video";
+export const EVENT_SET_VOLUME = "set-volume";
 
 // Video Player API
 export interface IVideoPlayerAPI {
@@ -58,7 +58,6 @@ export const VideoPlayerAPI: IVideoPlayerAPI = {
 		ipcRenderer.on(EVENT_UNPAUSE_VIDEO, callback)
 	},
 	onVolumeChange: (callback) => {
-		debugger;
 		ipcRenderer.on(EVENT_SET_VOLUME, callback)
 	},
 	onUpdateCurrentTime: (callback) => {

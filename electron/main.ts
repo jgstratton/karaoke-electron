@@ -3,6 +3,7 @@ import * as path from 'path'
 import * as url from 'url'
 import * as fs from 'fs'
 import type { MediaFile } from './preload-types'
+import { EVENT_PAUSE_VIDEO, EVENT_SET_VOLUME, EVENT_UNPAUSE_VIDEO } from './contextBridge/VideoPlayerApi'
 
 let mainWindow: BrowserWindow | null = null
 let dbExplorerWindow: BrowserWindow | null = null
@@ -321,23 +322,23 @@ ipcMain.on('play-video', (event: Electron.IpcMainEvent, videoPath: string) => {
 	mainWindow.focus()
 })
 
-const sendPlayerEvents = (eventName:string) => {
+const sendPlayerEvents = (eventName:string, ...args: any[]) => {
 	if (!mainWindow) {
 		return;
 	}
 
 	// Send the pause command to the main window
-	mainWindow.webContents.send(eventName)
+	mainWindow.webContents.send(eventName, ...args)
 
 	// Also send to video player window if it's open
 	if (videoPlayerWindow) {
-		videoPlayerWindow.webContents.send(eventName)
+		videoPlayerWindow.webContents.send(eventName, ...args)
 	}
 }
 
-ipcMain.on('pause-video', (event: Electron.IpcMainEvent) => sendPlayerEvents('pause-video'))
-ipcMain.on('unpause-video', (event: Electron.IpcMainEvent) => sendPlayerEvents('unpause-video'))
-
+ipcMain.on(EVENT_PAUSE_VIDEO, (event) => sendPlayerEvents(EVENT_PAUSE_VIDEO))
+ipcMain.on(EVENT_UNPAUSE_VIDEO, (event) => sendPlayerEvents(EVENT_UNPAUSE_VIDEO))
+ipcMain.on(EVENT_SET_VOLUME, (event, volume) => sendPlayerEvents(EVENT_SET_VOLUME, volume))
 
 // IPC handler for getting current video state
 ipcMain.handle('get-current-video-state', async (event: Electron.IpcMainInvokeEvent): Promise<any> => {

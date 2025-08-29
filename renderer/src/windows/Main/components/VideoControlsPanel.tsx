@@ -94,14 +94,14 @@ export default function VideoControlsPanel() {
 								type="range"
 								min="0"
 								max="1"
-								step="0.1"
+								step="0.01"
 								value={playerState.volume}
 								className="video-volume-slider"
 								onChange={(e) => {
 									PlayerMediator.SetVolume(parseFloat(e.target.value));
 								}}
 							/>
-							<span>{Math.round(playerState.volume * 100)}%</span>
+							<span style={{ width: '60px' }}>{Math.round(playerState.volume * 100)}%</span>
 						</div>
 						<button className="video-control-btn secondary">
 							🖥️ Toggle Fullscreen

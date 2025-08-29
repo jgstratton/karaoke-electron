@@ -11,7 +11,6 @@ const PlayerMediator = {
 		window.videoPlayer.unpauseVideo();
 	},
 	SetVolume: (volume: number) => {
-		debugger;
 		store.dispatch(setVolume(volume));
 		window.videoPlayer.changeVolume(volume);
 	}

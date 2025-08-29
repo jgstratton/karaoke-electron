@@ -418,11 +418,14 @@ body {
 	display: flex;
 	align-items: center;
 	gap: 6px;
+	flex: 1;
 }
 
 .video-volume-slider {
-	width: 80px;
+	flex: 1;
+	min-width: 80px;
 	accent-color: #007bff;
+	padding: 0;
 }
 
 .video-preview-section h3 {
