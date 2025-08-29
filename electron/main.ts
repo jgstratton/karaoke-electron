@@ -60,7 +60,10 @@ function createMenu(): void {
 			submenu: [
 				{ role: 'reload' },
 				{ role: 'forceReload' },
-				{ role: 'toggleDevTools' },
+				{
+					role: 'toggleDevTools',
+					accelerator: 'F12'
+				},
 				{ type: 'separator' },
 				{ role: 'resetZoom' },
 				{ role: 'zoomIn' },
@@ -73,6 +76,27 @@ function createMenu(): void {
 
 	const menu = Menu.buildFromTemplate(template)
 	Menu.setApplicationMenu(menu)
+}
+
+function setupContextMenu(window: BrowserWindow): void {
+	window.webContents.on('context-menu', (event, params) => {
+		const menu = Menu.buildFromTemplate([
+			{
+				label: 'Inspect Element',
+				click: () => {
+					window.webContents.inspectElement(params.x, params.y)
+				}
+			},
+			{ type: 'separator' },
+			{ role: 'cut' },
+			{ role: 'copy' },
+			{ role: 'paste' },
+			{ type: 'separator' },
+			{ role: 'selectAll' }
+		])
+
+		menu.popup({ window: window })
+	})
 }
 
 function createDbExplorerWindow(): void {
@@ -103,6 +127,9 @@ function createDbExplorerWindow(): void {
 	dbExplorerWindow.on('closed', () => {
 		dbExplorerWindow = null
 	})
+
+	// Setup context menu for right-click inspect
+	setupContextMenu(dbExplorerWindow)
 }
 
 function createMediaBrowserWindow(): void {
@@ -133,6 +160,8 @@ function createMediaBrowserWindow(): void {
 	mediaBrowserWindow.on('closed', () => {
 		mediaBrowserWindow = null
 	})
+
+	setupContextMenu(mediaBrowserWindow)
 }
 
 function createVideoPlayerWindow(): void {
@@ -177,6 +206,9 @@ function createVideoPlayerWindow(): void {
 		videoPlayerWindow?.setMenuBarVisibility(true)
 		videoPlayerWindow?.setAutoHideMenuBar(false)
 	})
+
+	// Setup context menu for right-click inspect
+	setupContextMenu(videoPlayerWindow)
 }
 
 // IPC Handlers
@@ -409,6 +441,9 @@ function createWindow(): void {
 		mainWindow?.setMenuBarVisibility(true)
 		mainWindow?.setAutoHideMenuBar(false)
 	})
+
+	// Setup context menu for right-click inspect
+	setupContextMenu(mainWindow)
 }
 
 app.whenReady().then(() => {
