@@ -16,16 +16,6 @@ function createMenu(): void {
 			label: 'File',
 			submenu: [
 				{
-					label: 'Database Explorer',
-					click: () => {
-						if (dbExplorerWindow) {
-							dbExplorerWindow.focus()
-							return
-						}
-						createDbExplorerWindow()
-					},
-				},
-				{
 					label: 'Media Browser',
 					click: () => {
 						if (mediaBrowserWindow) {
@@ -64,10 +54,6 @@ function createMenu(): void {
 					role: 'toggleDevTools',
 					accelerator: 'F12'
 				},
-				{ type: 'separator' },
-				{ role: 'resetZoom' },
-				{ role: 'zoomIn' },
-				{ role: 'zoomOut' },
 				{ type: 'separator' },
 				{ role: 'togglefullscreen' },
 			],

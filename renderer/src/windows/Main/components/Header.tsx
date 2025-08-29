@@ -3,9 +3,10 @@ import { useState } from 'react'
 interface HeaderProps {
 	onOpenSettings: () => void
 	onViewReduxStore: () => void
+	onOpenDatabaseExplorer: () => void
 }
 
-export default function Header({ onOpenSettings, onViewReduxStore }: HeaderProps) {
+export default function Header({ onOpenSettings, onViewReduxStore, onOpenDatabaseExplorer }: HeaderProps) {
 	const [showToolsMenu, setShowToolsMenu] = useState(false)
 
 	return (
@@ -47,6 +48,15 @@ export default function Header({ onOpenSettings, onViewReduxStore }: HeaderProps
 								}}
 							>
 								View Redux Store
+							</div>
+							<div
+								className="dropdown-item"
+								onClick={() => {
+									onOpenDatabaseExplorer()
+									setShowToolsMenu(false)
+								}}
+							>
+								Database Explorer
 							</div>
 						</div>
 					)}

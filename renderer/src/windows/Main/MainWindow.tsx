@@ -8,10 +8,12 @@ import Header from "./components/Header"
 import SongList from "./components/SongList"
 import SettingsModal from "./components/SettingsModal"
 import ReduxStoreModal from "./components/ReduxStoreModal"
+import DatabaseExplorerModal from "./components/DatabaseExplorerModal"
 
 export default function MainWindow() {
 	const [isSettingsOpen, setIsSettingsOpen] = useState(false)
 	const [isReduxStoreOpen, setIsReduxStoreOpen] = useState(false)
+	const [isDatabaseExplorerOpen, setIsDatabaseExplorerOpen] = useState(false)
 	const reduxState = useSelector((state: RootState) => state)
 
 	const handleViewReduxStore = () => {
@@ -24,6 +26,7 @@ export default function MainWindow() {
 				<Header
 					onOpenSettings={() => setIsSettingsOpen(true)}
 					onViewReduxStore={handleViewReduxStore}
+					onOpenDatabaseExplorer={() => setIsDatabaseExplorerOpen(true)}
 				/>
 			</div>
 
@@ -52,6 +55,11 @@ export default function MainWindow() {
 				isOpen={isReduxStoreOpen}
 				onClose={() => setIsReduxStoreOpen(false)}
 				storeData={reduxState}
+			/>
+
+			<DatabaseExplorerModal
+				isOpen={isDatabaseExplorerOpen}
+				onClose={() => setIsDatabaseExplorerOpen(false)}
 			/>
 		</div>
 	)
