@@ -7,7 +7,6 @@ import { EVENT_PAUSE_VIDEO, EVENT_SET_VOLUME, EVENT_UNPAUSE_VIDEO } from './cont
 
 let mainWindow: BrowserWindow | null = null
 let dbExplorerWindow: BrowserWindow | null = null
-let settingsWindow: BrowserWindow | null = null
 let mediaBrowserWindow: BrowserWindow | null = null
 let videoPlayerWindow: BrowserWindow | null = null
 
@@ -24,16 +23,6 @@ function createMenu(): void {
 							return
 						}
 						createDbExplorerWindow()
-					},
-				},
-				{
-					label: 'Settings',
-					click: () => {
-						if (settingsWindow) {
-							settingsWindow.focus()
-							return
-						}
-						createSettingsWindow()
 					},
 				},
 				{
@@ -113,37 +102,6 @@ function createDbExplorerWindow(): void {
 
 	dbExplorerWindow.on('closed', () => {
 		dbExplorerWindow = null
-	})
-}
-
-function createSettingsWindow(): void {
-	settingsWindow = new BrowserWindow({
-		width: 500,
-		height: 400,
-		webPreferences: {
-			preload: path.join(__dirname, 'preload.js'),
-			contextIsolation: true,
-			nodeIntegration: false,
-			sandbox: false,
-		},
-		parent: mainWindow || undefined,
-		modal: true,
-		title: 'Settings',
-		resizable: false,
-	})
-
-	const devServerURL = process.env.VITE_DEV_SERVER_URL
-	if (devServerURL) {
-		settingsWindow.loadURL(devServerURL + '?view=settings')
-	} else {
-		const indexHtml =
-			url.pathToFileURL(path.join(__dirname, '..', 'dist', 'index.html')).toString() +
-			'?view=settings'
-		settingsWindow.loadURL(indexHtml)
-	}
-
-	settingsWindow.on('closed', () => {
-		settingsWindow = null
 	})
 }
 

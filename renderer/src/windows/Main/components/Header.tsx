@@ -1,4 +1,12 @@
-export default function Header() {
+import { useState } from 'react'
+
+interface HeaderProps {
+	onOpenSettings: () => void
+}
+
+export default function Header({ onOpenSettings }: HeaderProps) {
+	const [showToolsMenu, setShowToolsMenu] = useState(false)
+
 	return (
 		<>
 			<div className="karaoke-logo">
@@ -8,6 +16,33 @@ export default function Header() {
 					<p className="karaoke-subtitle">Professional Karaoke System</p>
 				</div>
 			</div>
+
+			<div className="header-menu">
+				<div className="menu-item">
+					<span
+						className="menu-label"
+						onClick={() => setShowToolsMenu(!showToolsMenu)}
+						onBlur={() => setTimeout(() => setShowToolsMenu(false), 150)}
+						tabIndex={0}
+					>
+						Tools <i className="fas fa-angle-down dropdown-arrow"></i>
+					</span>
+					{showToolsMenu && (
+						<div className="dropdown-menu">
+							<div
+								className="dropdown-item"
+								onClick={() => {
+									onOpenSettings()
+									setShowToolsMenu(false)
+								}}
+							>
+								Settings
+							</div>
+						</div>
+					)}
+				</div>
+			</div>
+
 			<div className="header-controls">
 				<span>Session: Active</span>
 				<span>•</span>

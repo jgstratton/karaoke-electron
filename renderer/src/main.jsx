@@ -4,6 +4,7 @@ import { Provider } from 'react-redux'
 import { store } from './windows/main/store'
 import App from './App'
 import './styles.css'
+import '@fortawesome/fontawesome-free/css/all.css'
 
 createRoot(document.getElementById('root')).render(
 	<React.StrictMode>
