@@ -208,6 +208,17 @@ function createVideoPlayerWindow(): void {
 	videoPlayerWindow.on('closed', () => {
 		videoPlayerWindow = null
 	})
+
+	// Add fullscreen event listeners to handle menu bar visibility
+	videoPlayerWindow.on('enter-full-screen', () => {
+		videoPlayerWindow?.setMenuBarVisibility(false)
+		videoPlayerWindow?.setAutoHideMenuBar(true)
+	})
+
+	videoPlayerWindow.on('leave-full-screen', () => {
+		videoPlayerWindow?.setMenuBarVisibility(true)
+		videoPlayerWindow?.setAutoHideMenuBar(false)
+	})
 }
 
 // IPC Handlers
@@ -428,6 +439,17 @@ function createWindow(): void {
 
 	mainWindow.on('closed', () => {
 		mainWindow = null
+	})
+
+	// Add fullscreen event listeners to handle menu bar visibility
+	mainWindow.on('enter-full-screen', () => {
+		mainWindow?.setMenuBarVisibility(false)
+		mainWindow?.setAutoHideMenuBar(true)
+	})
+
+	mainWindow.on('leave-full-screen', () => {
+		mainWindow?.setMenuBarVisibility(true)
+		mainWindow?.setAutoHideMenuBar(false)
 	})
 }
 
