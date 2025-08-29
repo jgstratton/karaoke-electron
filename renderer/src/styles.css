@@ -858,3 +858,52 @@ button:disabled {
 	justify-content: flex-end;
 	gap: 8px;
 }
+
+/* Redux Store Modal Specific Styles */
+.redux-store-modal {
+	width: 80vw;
+	max-width: 1000px;
+	max-height: 80vh;
+}
+
+.json-viewer {
+	background: #0d1117;
+	border: 1px solid #2a2f3a;
+	border-radius: 6px;
+	overflow: auto;
+	max-height: 60vh;
+}
+
+.json-content {
+	margin: 0;
+	padding: 16px;
+	color: #c9d1d9;
+	font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+	font-size: 12px;
+	line-height: 1.5;
+	overflow: auto;
+	white-space: pre;
+	background: transparent;
+}
+
+.copy-btn {
+	background: #238636;
+	color: white;
+	border: none;
+	padding: 6px 12px;
+	border-radius: 4px;
+	cursor: pointer;
+	font-size: 0.9rem;
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	transition: background-color 0.2s;
+}
+
+.copy-btn:hover {
+	background: #2ea043;
+}
+
+.copy-btn i {
+	font-size: 0.8rem;
+}

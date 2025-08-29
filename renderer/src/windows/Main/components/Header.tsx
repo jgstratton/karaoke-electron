@@ -2,9 +2,10 @@ import { useState } from 'react'
 
 interface HeaderProps {
 	onOpenSettings: () => void
+	onViewReduxStore: () => void
 }
 
-export default function Header({ onOpenSettings }: HeaderProps) {
+export default function Header({ onOpenSettings, onViewReduxStore }: HeaderProps) {
 	const [showToolsMenu, setShowToolsMenu] = useState(false)
 
 	return (
@@ -37,6 +38,15 @@ export default function Header({ onOpenSettings }: HeaderProps) {
 								}}
 							>
 								Settings
+							</div>
+							<div
+								className="dropdown-item"
+								onClick={() => {
+									onViewReduxStore()
+									setShowToolsMenu(false)
+								}}
+							>
+								View Redux Store
 							</div>
 						</div>
 					)}
