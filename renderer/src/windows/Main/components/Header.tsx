@@ -4,9 +4,10 @@ interface HeaderProps {
 	onOpenSettings: () => void
 	onViewReduxStore: () => void
 	onOpenDatabaseExplorer: () => void
+	onOpenMediaBrowser: () => void
 }
 
-export default function Header({ onOpenSettings, onViewReduxStore, onOpenDatabaseExplorer }: HeaderProps) {
+export default function Header({ onOpenSettings, onViewReduxStore, onOpenDatabaseExplorer, onOpenMediaBrowser }: HeaderProps) {
 	const [showToolsMenu, setShowToolsMenu] = useState(false)
 
 	return (
@@ -57,6 +58,15 @@ export default function Header({ onOpenSettings, onViewReduxStore, onOpenDatabas
 								}}
 							>
 								Database Explorer
+							</div>
+							<div
+								className="dropdown-item"
+								onClick={() => {
+									onOpenMediaBrowser()
+									setShowToolsMenu(false)
+								}}
+							>
+								Media Browser
 							</div>
 						</div>
 					)}

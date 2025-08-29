@@ -16,16 +16,6 @@ function createMenu(): void {
 			label: 'File',
 			submenu: [
 				{
-					label: 'Media Browser',
-					click: () => {
-						if (mediaBrowserWindow) {
-							mediaBrowserWindow.focus()
-							return
-						}
-						createMediaBrowserWindow()
-					},
-				},
-				{
 					label: 'Launch Video Player',
 					click: () => {
 						if (videoPlayerWindow) {

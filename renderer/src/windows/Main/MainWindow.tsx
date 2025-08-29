@@ -9,11 +9,13 @@ import SongList from "./components/SongList"
 import SettingsModal from "./components/SettingsModal"
 import ReduxStoreModal from "./components/ReduxStoreModal"
 import DatabaseExplorerModal from "./components/DatabaseExplorerModal"
+import MediaBrowserModal from "./components/MediaBrowserModal"
 
 export default function MainWindow() {
 	const [isSettingsOpen, setIsSettingsOpen] = useState(false)
 	const [isReduxStoreOpen, setIsReduxStoreOpen] = useState(false)
 	const [isDatabaseExplorerOpen, setIsDatabaseExplorerOpen] = useState(false)
+	const [isMediaBrowserOpen, setIsMediaBrowserOpen] = useState(false)
 	const reduxState = useSelector((state: RootState) => state)
 
 	const handleViewReduxStore = () => {
@@ -27,6 +29,7 @@ export default function MainWindow() {
 					onOpenSettings={() => setIsSettingsOpen(true)}
 					onViewReduxStore={handleViewReduxStore}
 					onOpenDatabaseExplorer={() => setIsDatabaseExplorerOpen(true)}
+					onOpenMediaBrowser={() => setIsMediaBrowserOpen(true)}
 				/>
 			</div>
 
@@ -60,6 +63,11 @@ export default function MainWindow() {
 			<DatabaseExplorerModal
 				isOpen={isDatabaseExplorerOpen}
 				onClose={() => setIsDatabaseExplorerOpen(false)}
+			/>
+
+			<MediaBrowserModal
+				isOpen={isMediaBrowserOpen}
+				onClose={() => setIsMediaBrowserOpen(false)}
 			/>
 		</div>
 	)
