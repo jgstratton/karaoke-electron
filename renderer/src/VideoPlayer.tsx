@@ -81,26 +81,11 @@ const VideoPlayer = ({ currentVideo, onVideoEnd, isPlaying, startingTime, volume
 	}, [onVideoEnd, onTimeUpdate, onVideoReady])
 
 	return (
-		<>
-			{!currentVideo && (
-				<div
-					style={{
-						display: 'flex',
-						alignItems: 'center',
-						justifyContent: 'center',
-						height: '400px',
-						background: '#0a0d12',
-						borderRadius: '8px',
-						border: '1px solid #2a2f3a',
-					}}
-				>
-					<p className="hint">No video selected. Use the Media Browser to choose a video.</p>
-				</div>
-			)}
 		<div
 			style={{
 				background: '#0a0d12',
 				overflow: 'hidden',
+				position: 'relative',
 			}}
 		>
 			<div style={{ position: 'relative' }}>
@@ -117,9 +102,29 @@ const VideoPlayer = ({ currentVideo, onVideoEnd, isPlaying, startingTime, volume
 				>
 					<source ref={sourceRef} src={currentVideo} />
 				</video>
+
+				{!currentVideo && (
+					<div
+						style={{
+							position: 'absolute',
+							top: 0,
+							left: 0,
+							right: 0,
+							bottom: 0,
+							display: 'flex',
+							alignItems: 'center',
+							justifyContent: 'center',
+							background: '#0a0d12',
+							borderRadius: '8px',
+							border: '1px solid #2a2f3a',
+							zIndex: 10,
+						}}
+					>
+						<p className="hint">No video selected. Use the Media Browser to choose a video.</p>
+					</div>
+				)}
 			</div>
 		</div>
-		</>
 	)
 }
 
