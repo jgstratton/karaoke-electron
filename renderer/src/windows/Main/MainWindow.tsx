@@ -10,6 +10,7 @@ import SettingsModal from "./components/SettingsModal"
 import ReduxStoreModal from "./components/ReduxStoreModal"
 import DatabaseExplorerModal from "./components/DatabaseExplorerModal"
 import MediaBrowserModal from "./components/MediaBrowserModal"
+import styles from "./MainWindow.module.css"
 
 export default function MainWindow() {
 	const [isSettingsOpen, setIsSettingsOpen] = useState(false)
@@ -23,8 +24,8 @@ export default function MainWindow() {
 	}
 
 	return (
-		<div className="karaoke-main-layout">
-			<div className="karaoke-header">
+		<div className={styles.mainLayout}>
+			<div className={styles.header}>
 				<Header
 					onOpenSettings={() => setIsSettingsOpen(true)}
 					onViewReduxStore={handleViewReduxStore}
@@ -33,19 +34,19 @@ export default function MainWindow() {
 				/>
 			</div>
 
-			<div className="singer-rotation-panel">
+			<div className={styles.singerRotationPanel}>
 				<SingerRotationPanel />
 			</div>
 
-			<div className="video-controls-section">
+			<div className={styles.videoControlsSection}>
 				<VideoControlsPanel />
 			</div>
 
-			<div className="video-preview-section">
+			<div className={styles.videoPreviewSection}>
 				<VideoPreview />
 			</div>
 
-			<div className="song-queue-section">
+			<div className={styles.songQueueSection}>
 				<SongList />
 			</div>
 

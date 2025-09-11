@@ -1,7 +1,9 @@
+import styles from './SongList.module.css';
+
 export default function SongList() {
 	return (
 		<>
-			<div className="queue-header">
+			<div className={styles.queueHeader}>
 				<span>#</span>
 				<span>Singer</span>
 				<span>Song</span>
@@ -9,38 +11,38 @@ export default function SongList() {
 				<span>Status</span>
 				<span></span>
 			</div>
-			<div className="queue-list">
-				<div className="queue-item current-song">
-					<span className="queue-position">1</span>
-					<span className="queue-singer">John Smith</span>
+			<div className={styles.queueList}>
+				<div className={`${styles.queueItem} ${styles.currentSong}`}>
+					<span className={styles.queuePosition}>1</span>
+					<span className={styles.queueSinger}>John Smith</span>
 					<span></span>
-					<span className="song-title">Sweet Caroline</span>
-					<span className="song-status">Now Playing</span>
-					<span className="show-on-hover">⋯</span>
+					<span className={styles.songTitle}>Sweet Caroline</span>
+					<span className={styles.songStatus}>Now Playing</span>
+					<span className={styles.showOnHover}>⋯</span>
 				</div>
-				<div className="queue-item">
-					<span className="queue-position">2</span>
-					<span className="queue-singer">Alice Brown</span>
+				<div className={styles.queueItem}>
+					<span className={styles.queuePosition}>2</span>
+					<span className={styles.queueSinger}>Alice Brown</span>
 					<span></span>
-					<span className="song-title">Don't Stop Believin'</span>
-					<span className="song-status">Queued</span>
-					<span className="show-on-hover">⋯</span>
+					<span className={styles.songTitle}>Don't Stop Believin'</span>
+					<span className={styles.songStatus}>Queued</span>
+					<span className={styles.showOnHover}>⋯</span>
 				</div>
-				<div className="queue-item">
-					<span className="queue-position">3</span>
-					<span className="queue-singer">Mike Johnson</span>
+				<div className={styles.queueItem}>
+					<span className={styles.queuePosition}>3</span>
+					<span className={styles.queueSinger}>Mike Johnson</span>
 					<span></span>
-					<span className="song-title">Bohemian Rhapsody</span>
-					<span className="song-status">Queued</span>
-					<span className="show-on-hover">⋯</span>
+					<span className={styles.songTitle}>Bohemian Rhapsody</span>
+					<span className={styles.songStatus}>Queued</span>
+					<span className={styles.showOnHover}>⋯</span>
 				</div>
-				<div className="queue-item">
-					<span className="queue-position">4</span>
-					<span className="queue-singer">Sarah Davis</span>
+				<div className={styles.queueItem}>
+					<span className={styles.queuePosition}>4</span>
+					<span className={styles.queueSinger}>Sarah Davis</span>
 					<span></span>
-					<span className="song-title">I Want It That Way</span>
-					<span className="song-status">Queued</span>
-					<span className="show-on-hover">⋯</span>
+					<span className={styles.songTitle}>I Want It That Way</span>
+					<span className={styles.songStatus}>Queued</span>
+					<span className={styles.showOnHover}>⋯</span>
 				</div>
 			</div>
 		</>

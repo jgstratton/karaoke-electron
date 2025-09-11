@@ -1,0 +1,141 @@
+/* SongList Component Styles */
+
+/* Queue Header */
+.queueHeader {
+	display: grid;
+	grid-gap: 3px;
+	padding: 6px;
+	color: #6c757d;
+	border-bottom: 1px solid rgb(75, 75, 75);
+	font-size: 1rem;
+	grid-template-columns: 30px 200px 250px auto 150px 30px;
+}
+
+/* Queue List Container */
+.queueList {
+	overflow-y: scroll;
+	scrollbar-width: none;
+	-ms-overflow-style: none;
+}
+
+.queueList::-webkit-scrollbar {
+	display: none;
+}
+
+/* Queue Item */
+.queueItem {
+	display: grid;
+	grid-gap: 3px;
+	padding: 6px;
+	grid-template-columns: 30px 200px 250px auto 150px 30px;
+	color: white;
+	border-bottom: 1px solid rgb(25, 25, 25);
+	background: none;
+	border-radius: 0;
+	transition: background-color 0.2s;
+	position: static;
+	overflow: visible;
+	cursor: pointer;
+	align-items: center;
+}
+
+.queueItem::before {
+	display: none;
+}
+
+.queueItem:hover {
+	background-color: rgb(25, 25, 25);
+	border-color: rgb(25, 25, 25);
+	transform: none;
+	box-shadow: none;
+}
+
+/* Current Song Highlight */
+.queueItem.currentSong {
+	background-color: rgb(25, 25, 25);
+	border-color: rgb(25, 25, 25);
+	box-shadow: none;
+	color: #ffc107;
+}
+
+.queueItem.currentSong::before {
+	display: none;
+}
+
+/* Queue Position */
+.queuePosition {
+	width: auto;
+	height: auto;
+	border-radius: 0;
+	background: none;
+	display: flex;
+	align-items: center;
+	justify-content: flex-start;
+	font-weight: normal;
+	color: white;
+	margin-right: 0;
+	font-size: 1rem;
+	box-shadow: none;
+	border: none;
+	position: static;
+	z-index: auto;
+}
+
+.currentSong .queuePosition {
+	background: none;
+	box-shadow: none;
+	animation: none;
+	color: #ffc107;
+}
+
+/* Queue Singer */
+.queueSinger {
+	color: white;
+	font-size: 1rem;
+	font-weight: normal;
+	text-transform: none;
+	letter-spacing: normal;
+}
+
+/* Song Title */
+.songTitle {
+	font-weight: normal;
+	font-size: 1rem;
+	margin-bottom: 0;
+	color: white;
+	text-shadow: none;
+	line-height: normal;
+}
+
+/* Song Status */
+.songStatus {
+	color: white;
+	font-size: 1rem;
+	font-weight: normal;
+}
+
+/* Show on Hover */
+.showOnHover {
+	visibility: hidden;
+}
+
+.queueItem:hover .showOnHover {
+	visibility: visible;
+}
+
+/* Responsive Styles */
+@media (max-width: 1300px) {
+	.queueItem,
+	.queueHeader {
+		grid-gap: 2px;
+		padding: 5px;
+		grid-template-columns: 25px 200px 250px auto 125px 30px;
+		font-size: 12px;
+	}
+}
+
+@media (max-width: 1000px) {
+	.showOnHover {
+		visibility: visible;
+	}
+}

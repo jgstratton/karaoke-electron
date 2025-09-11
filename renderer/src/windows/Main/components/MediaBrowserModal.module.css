@@ -1,0 +1,243 @@
+/* MediaBrowserModal specific styles */
+.mediaPathSection {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 20px;
+	padding-bottom: 16px;
+	border-bottom: 1px solid #2a2f3a;
+}
+
+.mediaPathInfo {
+	margin: 0;
+	color: #7d8590;
+	font-size: 0.9rem;
+}
+
+.mediaPathInfo strong {
+	color: #f0f6fc;
+}
+
+.searchFiltersSection {
+	margin-bottom: 20px;
+}
+
+.searchControls {
+	display: flex;
+	gap: 12px;
+	align-items: center;
+	margin-bottom: 16px;
+	flex-wrap: wrap;
+}
+
+.searchInput {
+	flex: 1;
+	min-width: 200px;
+	background: #0d1117;
+	border: 1px solid #21262d;
+	border-radius: 6px;
+	padding: 8px 12px;
+	color: #f0f6fc;
+	font-size: 0.9rem;
+}
+
+.searchInput:focus {
+	outline: none;
+	border-color: #58a6ff;
+	box-shadow: 0 0 0 2px rgba(88, 166, 255, 0.2);
+}
+
+.sortSelect {
+	background: #21262d;
+	border: 1px solid #30363d;
+	border-radius: 6px;
+	padding: 8px 12px;
+	color: #f0f6fc;
+	font-size: 0.9rem;
+	cursor: pointer;
+}
+
+.sortSelect:focus {
+	outline: none;
+	border-color: #58a6ff;
+}
+
+.sortOrderBtn {
+	background: #21262d;
+	border: 1px solid #30363d;
+	border-radius: 6px;
+	padding: 8px 12px;
+	color: #f0f6fc;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	min-width: 44px;
+	justify-content: center;
+}
+
+.sortOrderBtn:hover {
+	background: #30363d;
+}
+
+.extensionFilters {
+	margin-top: 12px;
+}
+
+.filterLabel {
+	margin: 0 0 8px 0;
+	font-weight: bold;
+	color: #58a6ff;
+	font-size: 0.9rem;
+}
+
+.extensionCheckboxes {
+	display: flex;
+	gap: 12px;
+	flex-wrap: wrap;
+}
+
+.extensionCheckbox {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	font-size: 0.85rem;
+	cursor: pointer;
+	color: #c9d1d9;
+}
+
+.extensionCheckbox input[type="checkbox"] {
+	margin: 0;
+}
+
+.extensionCheckbox:hover {
+	color: #f0f6fc;
+}
+
+.resultsSummary {
+	margin-bottom: 16px;
+	padding: 8px 0;
+	border-bottom: 1px solid #21262d;
+}
+
+.resultsSummary p {
+	margin: 0;
+	color: #7d8590;
+	font-size: 0.9rem;
+}
+
+.fileListContainer {
+	flex: 1;
+	min-height: 0;
+	display: flex;
+	flex-direction: column;
+}
+
+.scanningMessage,
+.noFilesMessage {
+	text-align: center;
+	padding: 40px 20px;
+	color: #7d8590;
+}
+
+.noMediaPath {
+	text-align: center;
+	padding: 40px 20px;
+}
+
+.noMediaPath p {
+	color: #c9d1d9;
+	margin-bottom: 8px;
+}
+
+.noMediaPath .hint {
+	color: #7d8590;
+	font-size: 0.9rem;
+}
+
+.fileList {
+	flex: 1;
+	overflow-y: auto;
+	border: 1px solid #21262d;
+	border-radius: 6px;
+	background: #0d1117;
+	max-height: 500px;
+}
+
+.fileItem {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 12px 16px;
+	border-bottom: 1px solid #21262d;
+	background: #161b22;
+	transition: background-color 0.2s;
+}
+
+.fileItem:hover {
+	background: #1c2128;
+}
+
+.fileItem:last-child {
+	border-bottom: none;
+}
+
+.fileInfo {
+	flex: 1;
+	min-width: 0;
+	margin-right: 16px;
+}
+
+.fileName {
+	font-weight: bold;
+	color: #f0f6fc;
+	margin-bottom: 4px;
+	word-break: break-word;
+}
+
+.filePath {
+	color: #7d8590;
+	font-size: 0.8rem;
+	margin-bottom: 4px;
+	word-break: break-word;
+}
+
+.fileDetails {
+	color: #7d8590;
+	font-size: 0.75rem;
+}
+
+.fileActions {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	flex-shrink: 0;
+}
+
+.playBtn {
+	background: #238636;
+	color: white;
+	border: none;
+	border-radius: 6px;
+	padding: 8px 16px;
+	cursor: pointer;
+	font-size: 0.85rem;
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	transition: background-color 0.2s;
+}
+
+.playBtn:hover {
+	background: #2ea043;
+}
+
+.fileExtension {
+	background: #1f6feb;
+	color: white;
+	padding: 4px 8px;
+	border-radius: 4px;
+	font-size: 0.75rem;
+	font-weight: bold;
+	min-width: 40px;
+	text-align: center;
+}

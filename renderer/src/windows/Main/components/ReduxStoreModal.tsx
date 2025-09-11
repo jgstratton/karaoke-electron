@@ -1,4 +1,5 @@
 import React from 'react'
+import Modal, { modalStyles } from '../../../components/shared/Modal'
 
 interface ReduxStoreModalProps {
 	isOpen: boolean
@@ -15,12 +16,6 @@ export default function ReduxStoreModal({ isOpen, onClose, storeData }: ReduxSto
 		}
 	}
 
-	const handleOverlayClick = (e: React.MouseEvent) => {
-		if (e.target === e.currentTarget) {
-			onClose()
-		}
-	}
-
 	const copyToClipboard = () => {
 		navigator.clipboard.writeText(jsonString).then(() => {
 			alert('Redux store copied to clipboard!')
@@ -29,39 +24,34 @@ export default function ReduxStoreModal({ isOpen, onClose, storeData }: ReduxSto
 		})
 	}
 
-	if (!isOpen) return null
+	const footerButtons = (
+		<>
+			<button
+				className={modalStyles.primaryBtn}
+				onClick={copyToClipboard}
+				title="Copy to clipboard"
+			>
+				<i className="fas fa-copy"></i> Copy
+			</button>
+			<button className={modalStyles.secondaryBtn} onClick={onClose}>
+				Close
+			</button>
+		</>
+	)
 
 	return (
-		<div className="modal-overlay" onClick={handleOverlayClick} onKeyDown={handleKeyDown} tabIndex={-1}>
-			<div className="modal-content redux-store-modal">
-				<div className="modal-header">
-					<h2>Redux Store State</h2>
-					<div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-						<button
-							className="copy-btn"
-							onClick={copyToClipboard}
-							title="Copy to clipboard"
-						>
-							<i className="fas fa-copy"></i> Copy
-						</button>
-						<button className="modal-close-btn" onClick={onClose}>×</button>
-					</div>
-				</div>
-
-				<div className="modal-body">
-					<div className="json-viewer">
-						<pre className="json-content">
-							<code>{jsonString}</code>
-						</pre>
-					</div>
-				</div>
-
-				<div className="modal-footer">
-					<button onClick={onClose}>
-						Close
-					</button>
-				</div>
-			</div>
+		<div onKeyDown={handleKeyDown} tabIndex={-1}>
+			<Modal
+				isOpen={isOpen}
+				onClose={onClose}
+				title="Redux Store State"
+				size="large"
+				footer={footerButtons}
+			>
+				<pre className={modalStyles.codeBlock} style={{ maxHeight: '60vh' }}>
+					<code>{jsonString}</code>
+				</pre>
+			</Modal>
 		</div>
 	)
 }

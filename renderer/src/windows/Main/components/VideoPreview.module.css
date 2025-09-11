@@ -1,0 +1,17 @@
+/* VideoPreview Component Styles */
+
+/* Video Header */
+.videoHeader {
+	display: grid;
+	grid-gap: 3px;
+	padding: 6px;
+	color: #6c757d;
+	border-bottom: 1px solid rgb(75, 75, 75);
+	font-size: 1rem;
+	grid-template-columns: 1fr;
+}
+
+/* Video Content */
+.videoContent {
+	padding: 6px;
+}

@@ -1,0 +1,131 @@
+/* VideoControlsPanel Component Styles */
+
+/* Video Controls Header */
+.videoControlsHeader {
+	display: grid;
+	grid-gap: 3px;
+	padding: 6px;
+	color: #6c757d;
+	border-bottom: 1px solid rgb(75, 75, 75);
+	font-size: 1rem;
+	grid-template-columns: 1fr;
+}
+
+/* Video Controls Content */
+.videoControlsContent {
+	padding: 12px;
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+/* Video Controls Group */
+.videoControlsGroup {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.videoControlsGroup h4 {
+	margin: 0;
+	color: white;
+	font-size: 0.9rem;
+	font-weight: 600;
+	border-bottom: 1px solid rgb(75, 75, 75);
+	padding-bottom: 6px;
+}
+
+/* Video Controls Row */
+.videoControlsRow {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+/* Video Control Button */
+.videoControlBtn {
+	background: #007bff;
+	color: white;
+	border: none;
+	padding: 6px 12px;
+	border-radius: 0.25rem;
+	font-size: 0.8rem;
+	cursor: pointer;
+	transition: background-color 0.2s;
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.videoControlBtn:hover {
+	background: #0056b3;
+}
+
+.videoControlBtn:disabled {
+	background: #6c757d;
+	cursor: not-allowed;
+}
+
+.videoControlBtn.secondary {
+	background: #6c757d;
+}
+
+.videoControlBtn.secondary:hover {
+	background: #5a6268;
+}
+
+/* Video Progress */
+.videoProgressContainer {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	position: relative;
+}
+
+.videoProgressBar {
+	width: 100%;
+	height: 6px;
+	background: rgba(255, 255, 255, 0.3);
+	border-radius: 3px;
+	cursor: pointer;
+	overflow: hidden;
+	transition: height 0.2s ease;
+}
+
+.videoProgressBar:hover {
+	height: 8px;
+	background: rgba(255, 255, 255, 0.4);
+}
+
+.videoProgressFill {
+	height: 100%;
+	background: #007bff;
+	border-radius: 3px;
+	transition: width 0.1s, background-color 0.2s ease;
+}
+
+.videoProgressBar:hover .videoProgressFill {
+	background: #0056b3;
+}
+
+/* Video Time Display */
+.videoTimeDisplay {
+	color: #a0a7b4;
+	font-size: 0.875rem;
+	font-family: monospace;
+}
+
+/* Video Volume */
+.videoVolumeContainer {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	flex: 1;
+}
+
+.videoVolumeSlider {
+	flex: 1;
+	min-width: 80px;
+	accent-color: #007bff;
+	padding: 0;
+}

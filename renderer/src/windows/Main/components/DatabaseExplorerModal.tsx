@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import PouchDB from 'pouchdb-browser'
+import modalStyles from '../../../components/shared/Modal.module.css'
+import styles from './DatabaseExplorerModal.module.css'
 
 const db = new PouchDB('karaoke-db')
 
@@ -49,68 +51,70 @@ export default function DatabaseExplorerModal({ isOpen, onClose }: DatabaseExplo
 	if (!isOpen) return null
 
 	return (
-		<div className="modal-overlay" onClick={onClose}>
-			<div className="modal-content database-explorer-modal" onClick={(e) => e.stopPropagation()}>
-				<div className="modal-header">
+		<div className={modalStyles.overlay} onClick={onClose}>
+			<div className={`${modalStyles.content} ${modalStyles.large}`} onClick={(e) => e.stopPropagation()}>
+				<div className={modalStyles.header}>
 					<h2>Database Explorer</h2>
-					<button className="modal-close-btn" onClick={onClose}>
+					<button className={modalStyles.closeBtn} onClick={onClose}>
 						×
 					</button>
 				</div>
 
-				<div className="modal-body">
+				<div className={modalStyles.body}>
 					{loading ? (
-						<div className="loading-container">
+						<div className={modalStyles.loadingContainer}>
 							<p>Loading database information...</p>
 						</div>
 					) : (
 						<>
 							{dbInfo && (
-								<div className="db-info-section">
-									<h3>Database Information</h3>
-									<div className="db-info">
-										<div className="info-item">
+								<div className={modalStyles.infoSection}>
+									<h3 className={modalStyles.sectionTitle}>Database Information</h3>
+									<div className={styles.dbInfo}>
+										<div className={styles.infoItem}>
 											<strong>Name:</strong> {dbInfo.db_name}
 										</div>
-										<div className="info-item">
+										<div className={styles.infoItem}>
 											<strong>Documents:</strong> {dbInfo.doc_count}
 										</div>
-										<div className="info-item">
+										<div className={styles.infoItem}>
 											<strong>Size:</strong> {Math.round(dbInfo.data_size / 1024)}KB
 										</div>
 									</div>
 								</div>
 							)}
 
-							<div className="documents-section">
-								<div className="section-header">
-									<h3>All Documents ({allDocs.length})</h3>
-									<button className="refresh-btn" onClick={loadData}>
+							<div>
+								<div className={modalStyles.sectionHeader}>
+									<h3 className={modalStyles.sectionTitle}>All Documents ({allDocs.length})</h3>
+									<button className={modalStyles.primaryBtn} onClick={loadData}>
 										<i className="fas fa-sync-alt"></i> Refresh
 									</button>
 								</div>
 
 								{allDocs.length === 0 ? (
-									<p className="no-documents">No documents found.</p>
+									<p className={modalStyles.noData}>No documents found.</p>
 								) : (
-									<div className="documents-list">
+									<div className={modalStyles.scrollableList}>
 										{allDocs.map((row, index) => (
-											<div key={row.id} className="document-item">
-												<div className="document-header">
-													<strong className="document-title">
+											<div key={row.id} className={modalStyles.listItem}>
+												<div className={modalStyles.listItemHeader}>
+													<strong className={modalStyles.listItemTitle}>
 														Document {index + 1}: {row.id}
 													</strong>
 													<button
-														className="delete-btn"
+														className={modalStyles.dangerBtn}
 														onClick={() => deleteDoc(row.id)}
 														title="Delete document"
 													>
 														<i className="fas fa-trash"></i>
 													</button>
 												</div>
-												<pre className="document-content">
-													{JSON.stringify(row.doc, null, 2)}
-												</pre>
+												<div className={modalStyles.listItemContent}>
+													<pre className={modalStyles.codeBlock}>
+														{JSON.stringify(row.doc, null, 2)}
+													</pre>
+												</div>
 											</div>
 										))}
 									</div>

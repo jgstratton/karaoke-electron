@@ -1,0 +1,18 @@
+/* DatabaseExplorerModal specific styles */
+.dbInfo {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+	gap: 8px;
+}
+
+.infoItem {
+	background: #0d1117;
+	padding: 8px 12px;
+	border-radius: 6px;
+	border: 1px solid #21262d;
+	font-size: 0.9rem;
+}
+
+.infoItem strong {
+	color: #f0f6fc;
+}

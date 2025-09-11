@@ -1,6 +1,7 @@
 import { RootState } from "@/windows/main/store";
 import VideoPlayer from "@/VideoPlayer";
 import { useSelector } from "react-redux";
+import styles from './VideoPreview.module.css';
 
 export default function VideoPreview() {
 
@@ -8,10 +9,10 @@ export default function VideoPreview() {
 
 	return (
 		<>
-			<div className="video-header">
+			<div className={styles.videoHeader}>
 				<span>Video Preview</span>
 			</div>
-			<div className="video-content">
+			<div className={styles.videoContent}>
 				<VideoPlayer
 					currentVideo={playerState.currentVideo}
 					isPlaying={playerState.isPlaying}

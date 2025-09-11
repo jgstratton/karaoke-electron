@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import PouchDB from 'pouchdb-browser'
+import Modal, { modalStyles } from '../../../components/shared/Modal'
 
 const db = new PouchDB('karaoke-db')
 
@@ -117,112 +118,99 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 		}
 	}
 
-	const handleOverlayClick = (e: React.MouseEvent) => {
-		if (e.target === e.currentTarget) {
-			onClose()
-		}
-	}
-
-	if (!isOpen) return null
+	const footerButtons = (
+		<>
+			<button className={modalStyles.secondaryBtn} onClick={onClose}>
+				Cancel
+			</button>
+			<button
+				className={canSave ? modalStyles.primaryBtn : modalStyles.secondaryBtn}
+				onClick={saveSettings}
+				disabled={!canSave}
+				style={{
+					opacity: canSave ? 1 : 0.6,
+					cursor: canSave ? 'pointer' : 'not-allowed',
+				}}
+			>
+				{saving ? 'Saving...' : 'Save Settings'}
+			</button>
+		</>
+	)
 
 	return (
-		<div className="modal-overlay" onClick={handleOverlayClick} onKeyDown={handleKeyDown} tabIndex={-1}>
-			<div className="modal-content settings-modal">
-				<div className="modal-header">
-					<h2>Settings</h2>
-					<button className="modal-close-btn" onClick={onClose}>×</button>
-				</div>
-
-				<div className="modal-body">
-					{loading ? (
+		<div onKeyDown={handleKeyDown} tabIndex={-1}>
+			<Modal
+				isOpen={isOpen}
+				onClose={onClose}
+				title="Settings"
+				size="medium"
+				footer={footerButtons}
+			>
+				{loading ? (
+					<div className={modalStyles.loadingContainer}>
 						<p>Loading settings...</p>
-					) : (
-						<>
-							<div style={{ marginBottom: 20 }}>
-								<h3 style={{ marginBottom: 8 }}>Media Files Location</h3>
-								<p className="hint" style={{ marginBottom: 12, fontSize: '0.9em' }}>
-									Choose a folder where your video and picture files are stored. This path
-									will be saved in the database.
-								</p>
+					</div>
+				) : (
+					<div className={modalStyles.infoSection}>
+						<h3 className={modalStyles.sectionTitle}>Media Files Location</h3>
+						<p className="hint" style={{ marginBottom: 12, fontSize: '0.9em', color: '#7d8590' }}>
+							Choose a folder where your video and picture files are stored. This path
+							will be saved in the database.
+						</p>
 
-								<div style={{ marginBottom: 12 }}>
-									<label style={{ display: 'block', marginBottom: 4, fontWeight: 'bold' }}>
-										Folder Path:
-									</label>
-									<div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-										<input
-											type="text"
-											value={mediaPath}
-											onChange={e => {
-												setMediaPath(e.target.value)
-												validatePath(e.target.value)
-											}}
-											placeholder="e.g., C:\\Users\\YourName\\Music\\Karaoke"
-											style={{
-												flex: 1,
-												fontSize: '0.9em',
-											}}
-											autoComplete="off"
-										/>
-										<button
-											onClick={browseForFolder}
-											style={{
-												background: '#007bff',
-												color: 'white',
-												border: 'none',
-												padding: '8px 12px',
-												borderRadius: '4px',
-												cursor: 'pointer',
-												fontSize: '0.9em',
-											}}
-										>
-											Browse...
-										</button>
-									</div>
-
-									{pathValid === true && (
-										<p style={{ color: '#28a745', fontSize: '0.8em', margin: '4px 0 0 0' }}>
-											✓ Valid folder path
-										</p>
-									)}
-									{pathValid === false && (
-										<p style={{ color: '#dc3545', fontSize: '0.8em', margin: '4px 0 0 0' }}>
-											✗ Invalid folder path or folder doesn't exist
-										</p>
-									)}
-								</div>
-
-								<div style={{ marginBottom: 16 }}>
-									<p className="hint" style={{ fontSize: '0.85em', margin: 0 }}>
-										<strong>Tip:</strong> Use a folder that contains your karaoke video files.
-										Supported formats include MP4, AVI, MKV, and more.
-									</p>
-								</div>
+						<div style={{ marginBottom: 12 }}>
+							<label style={{ display: 'block', marginBottom: 4, fontWeight: 'bold', color: '#f0f6fc' }}>
+								Folder Path:
+							</label>
+							<div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+								<input
+									type="text"
+									value={mediaPath}
+									onChange={e => {
+										setMediaPath(e.target.value)
+										validatePath(e.target.value)
+									}}
+									placeholder="e.g., C:\\Users\\YourName\\Music\\Karaoke"
+									style={{
+										flex: 1,
+										fontSize: '0.9em',
+										background: '#0d1117',
+										color: '#f0f6fc',
+										border: '1px solid #21262d',
+										borderRadius: '6px',
+										padding: '8px 12px',
+									}}
+									autoComplete="off"
+								/>
+								<button
+									className={modalStyles.primaryBtn}
+									onClick={browseForFolder}
+								>
+									Browse...
+								</button>
 							</div>
-						</>
-					)}
-				</div>
 
-				<div className="modal-footer">
-					<button onClick={onClose} style={{ marginRight: 8 }}>
-						Cancel
-					</button>
-					<button
-						onClick={saveSettings}
-						disabled={!canSave}
-						style={{
-							background: canSave ? '#28a745' : '#6c757d',
-							color: 'white',
-							border: 'none',
-							padding: '8px 16px',
-							borderRadius: '4px',
-							cursor: canSave ? 'pointer' : 'not-allowed',
-						}}
-					>
-						{saving ? 'Saving...' : 'Save Settings'}
-					</button>
-				</div>
-			</div>
+							{pathValid === true && (
+								<p style={{ color: '#2ea043', fontSize: '0.8em', margin: '4px 0 0 0' }}>
+									✓ Valid folder path
+								</p>
+							)}
+							{pathValid === false && (
+								<p style={{ color: '#f85149', fontSize: '0.8em', margin: '4px 0 0 0' }}>
+									✗ Invalid folder path or folder doesn't exist
+								</p>
+							)}
+						</div>
+
+						<div style={{ marginBottom: 16 }}>
+							<p style={{ fontSize: '0.85em', margin: 0, color: '#7d8590' }}>
+								<strong style={{ color: '#f0f6fc' }}>Tip:</strong> Use a folder that contains your karaoke video files.
+								Supported formats include MP4, AVI, MKV, and more.
+							</p>
+						</div>
+					</div>
+				)}
+			</Modal>
 		</div>
 	)
 }

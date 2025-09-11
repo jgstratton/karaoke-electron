@@ -1,36 +1,38 @@
+import styles from './SingerRotationPanel.module.css';
+
 export default function SingerRotationPanel() {
 	return (
 		<>
-			<div className="singer-header">
+			<div className={styles.singerHeader}>
 				<span>#</span>
 				<span>Singer Rotation</span>
 				<span></span>
 				<span></span>
 			</div>
-			<div className="singer-list">
-				<div className="singer-item current-singer">
-					<span className="singer-avatar">1</span>
-					<span className="singer-name">John Smith</span>
+			<div className={styles.singerList}>
+				<div className={`${styles.singerItem} ${styles.currentSinger}`}>
+					<span className={styles.singerAvatar}>1</span>
+					<span className={styles.singerName}>John Smith</span>
 					<span></span>
-					<span className="show-on-hover">⋯</span>
+					<span className={styles.showOnHover}>⋯</span>
 				</div>
-				<div className="singer-item">
-					<span className="singer-avatar">2</span>
-					<span className="singer-name">Alice Brown</span>
+				<div className={styles.singerItem}>
+					<span className={styles.singerAvatar}>2</span>
+					<span className={styles.singerName}>Alice Brown</span>
 					<span></span>
-					<span className="show-on-hover">⋯</span>
+					<span className={styles.showOnHover}>⋯</span>
 				</div>
-				<div className="singer-item">
-					<span className="singer-avatar">3</span>
-					<span className="singer-name">Mike Johnson</span>
+				<div className={styles.singerItem}>
+					<span className={styles.singerAvatar}>3</span>
+					<span className={styles.singerName}>Mike Johnson</span>
 					<span></span>
-					<span className="show-on-hover">⋯</span>
+					<span className={styles.showOnHover}>⋯</span>
 				</div>
-				<div className="singer-item">
-					<span className="singer-avatar">4</span>
-					<span className="singer-name">Sarah Davis</span>
+				<div className={styles.singerItem}>
+					<span className={styles.singerAvatar}>4</span>
+					<span className={styles.singerName}>Sarah Davis</span>
 					<span></span>
-					<span className="show-on-hover">⋯</span>
+					<span className={styles.showOnHover}>⋯</span>
 				</div>
 			</div>
 		</>

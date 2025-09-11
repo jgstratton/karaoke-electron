@@ -1,0 +1,116 @@
+/* SingerRotationPanel Component Styles */
+
+/* Singer Header */
+.singerHeader {
+	display: grid;
+	grid-gap: 3px;
+	padding: 6px;
+	color: #6c757d;
+	border-bottom: 1px solid rgb(75, 75, 75);
+	font-size: 1rem;
+	grid-template-columns: 30px auto 120px 30px;
+}
+
+/* Singer List Container */
+.singerList {
+	overflow-y: scroll;
+	scrollbar-width: none;
+	-ms-overflow-style: none;
+}
+
+.singerList::-webkit-scrollbar {
+	display: none;
+}
+
+/* Singer Item */
+.singerItem {
+	display: grid;
+	grid-gap: 3px;
+	padding: 6px;
+	grid-template-columns: 30px auto 120px 30px;
+	color: white;
+	border-bottom: 1px solid rgb(25, 25, 25);
+	background: none;
+	border-radius: 0;
+	transition: background-color 0.2s;
+	position: static;
+	overflow: visible;
+	cursor: pointer;
+	align-items: center;
+}
+
+.singerItem::before {
+	display: none;
+}
+
+.singerItem:hover {
+	background-color: rgb(25, 25, 25);
+	border-color: rgb(25, 25, 25);
+	transform: none;
+	box-shadow: none;
+}
+
+/* Current Singer Highlight */
+.singerItem.currentSinger {
+	background-color: rgb(25, 25, 25);
+	border-color: rgb(25, 25, 25);
+	box-shadow: none;
+}
+
+.singerItem.currentSinger::before {
+	display: none;
+}
+
+/* Singer Avatar */
+.singerAvatar {
+	width: 24px;
+	height: 24px;
+	border-radius: 50%;
+	background: #6c757d;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-weight: normal;
+	color: white;
+	margin-right: 0;
+	font-size: 0.8rem;
+	box-shadow: none;
+	border: none;
+	position: static;
+	z-index: auto;
+}
+
+.currentSinger .singerAvatar {
+	background: #ffc107;
+	color: #000;
+	box-shadow: none;
+}
+
+/* Singer Name */
+.singerName {
+	font-weight: normal;
+	font-size: 1rem;
+	margin-bottom: 0;
+	color: white;
+	text-shadow: none;
+}
+
+/* Show on Hover */
+.showOnHover {
+	visibility: hidden;
+}
+
+.singerItem:hover .showOnHover {
+	visibility: visible;
+}
+
+/* Responsive Styles */
+@media (max-width: 1300px) {
+	.singerItem,
+	.singerHeader {
+		grid-gap: 2px;
+		padding: 5px;
+		grid-template-columns: 25px auto 100px 30px;
+		font-size: 12px;
+	}
+}

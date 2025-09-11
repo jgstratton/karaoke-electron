@@ -1,0 +1,88 @@
+/* MainWindow CSS Module - Layout and Grid Styles */
+
+/* Main Layout Grid */
+.mainLayout {
+	display: grid;
+	grid-gap: 10px;
+	grid-template-columns: 25% auto 35%;
+	grid-template-rows: auto auto 1fr;
+	grid-template-areas:
+		"header header header"
+		"singerList videoControls videoPreview"
+		"singerList songQueue songQueue";
+	height: 100vh;
+	width: 100vw;
+	background-color: rgba(0, 0, 0, 0.8);
+	padding: 10px;
+}
+
+/* Grid Areas */
+.header {
+	grid-area: header;
+	background-color: rgba(18, 18, 18, 0.95);
+	border-radius: 0.375rem;
+	padding: 15px 20px;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	border-bottom: 1px solid rgb(75, 75, 75);
+	gap: 16px;
+}
+
+.singerRotationPanel {
+	grid-area: singerList;
+	width: auto;
+	background-color: rgba(18, 18, 18, 0.95);
+	border-radius: 0.375rem;
+	border-right: none;
+	display: grid;
+	grid-template-rows: auto 1fr auto;
+	padding: 0;
+	box-shadow: none;
+}
+
+.videoControlsSection {
+	grid-area: videoControls;
+	background-color: rgba(18, 18, 18, 0.95);
+	border-radius: 0.375rem;
+	border: none;
+	padding: 0;
+	display: grid;
+	grid-template-rows: auto 1fr;
+	box-shadow: none;
+}
+
+.videoPreviewSection {
+	grid-area: videoPreview;
+	background-color: rgba(18, 18, 18, 0.95);
+	border-radius: 0.375rem;
+	border: none;
+	padding: 0;
+	display: grid;
+	grid-template-rows: auto 1fr;
+	box-shadow: none;
+}
+
+.songQueueSection {
+	grid-area: songQueue;
+	background-color: rgba(18, 18, 18, 0.95);
+	border-radius: 0.375rem;
+	border: none;
+	padding: 0;
+	display: grid;
+	grid-template-rows: auto 1fr auto;
+	box-shadow: none;
+}
+
+/* Responsive Styles */
+@media (max-width: 1000px) {
+	.mainLayout {
+		grid-gap: 0;
+		grid-template-columns: 100% 0%;
+		grid-template-areas:
+			"singerList"
+			"videoPreview"
+			"songQueue";
+		grid-template-rows: 1fr auto auto;
+	}
+}
