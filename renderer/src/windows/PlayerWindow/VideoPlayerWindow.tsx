@@ -5,6 +5,7 @@ export default function VideoPlayerWindow() {
 	const [currentVideo, setCurrentVideo] = useState<string>('')
 	const [isPlaying, setIsPlaying] = useState<boolean>(false)
 	const [volume, setVolume] = useState<number>(1)
+	const [currentTime, setCurrentTime] = useState<number>(0)
 
 	useEffect(() => {
 		if (!window.videoPlayer) {
@@ -32,16 +33,23 @@ export default function VideoPlayerWindow() {
 			setVolume(newVolume)
 		}
 
+		const onCurrentTimeChange = (_event: any, currentTime: number) => {
+			console.log('Video Player Window - Received current time change command:', currentTime)
+			setCurrentTime(currentTime)
+		}
+
 		window.videoPlayer.onStartNewVideo(handlePlayVideo)
 		window.videoPlayer.onPauseVideo(onPauseVideo)
 		window.videoPlayer.onUnpauseVideo(onUnpauseVideo)
 		window.videoPlayer.onVolumeChange(onVolumeChange)
+		window.videoPlayer.onUpdateStartingTime(onCurrentTimeChange)
 
 		return () => {
 			window.videoPlayer.removeStartNewVideoListener(handlePlayVideo)
 			window.videoPlayer.removePauseVideoListener(onPauseVideo)
 			window.videoPlayer.removeUnpauseVideoListener(onUnpauseVideo)
 			window.videoPlayer.removeVolumeChangeListener(onVolumeChange)
+			window.videoPlayer.removeUpdateStartingTimeListener(onCurrentTimeChange)
 		}
 
 	}, [])
@@ -65,7 +73,7 @@ export default function VideoPlayerWindow() {
 						onVideoEnd={() => setCurrentVideo('')}
 						isMainPlayer={true}
 						isPlaying={isPlaying}
-						startingTime={0}
+						startingTime={currentTime}
 						volume={volume}
 						cssHeight={"100vh"}
 						onTimeUpdate={(currentTime) => window.videoPlayer.updateCurrentTime(currentTime)}

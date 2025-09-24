@@ -99,13 +99,13 @@
 
 .videoProgressFill {
 	height: 100%;
-	background: #007bff;
+	background: #5a0211;
 	border-radius: 3px;
 	transition: width 0.1s, background-color 0.2s ease;
 }
 
 .videoProgressBar:hover .videoProgressFill {
-	background: #0056b3;
+	background: #b30036;
 }
 
 /* Video Time Display */

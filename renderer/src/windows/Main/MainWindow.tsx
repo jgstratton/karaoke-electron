@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useSelector } from "react-redux"
 import { RootState } from "./store"
 import SingerRotationPanel from "./components/SingerRotationPanel"
@@ -10,6 +10,7 @@ import SettingsModal from "./components/SettingsModal"
 import ReduxStoreModal from "./components/ReduxStoreModal"
 import DatabaseExplorerModal from "./components/DatabaseExplorerModal"
 import MediaBrowserModal from "./components/MediaBrowserModal"
+import PlayerMediator from "../../mediators/PlayerMediator"
 import styles from "./MainWindow.module.css"
 
 export default function MainWindow() {
@@ -18,6 +19,28 @@ export default function MainWindow() {
 	const [isDatabaseExplorerOpen, setIsDatabaseExplorerOpen] = useState(false)
 	const [isMediaBrowserOpen, setIsMediaBrowserOpen] = useState(false)
 	const reduxState = useSelector((state: RootState) => state)
+
+	useEffect(() => {
+		if (!window.videoPlayer) {
+			return;
+		}
+
+		const handleTimeUpdate = (_event: any, currentTime: number) => {
+			PlayerMediator.UpdateCurrentTime(currentTime);
+		}
+
+		const handleDurationUpdate = (_event: any, duration: number) => {
+			PlayerMediator.UpdateDuration(duration);
+		}
+
+		window.videoPlayer.onUpdateCurrentTime(handleTimeUpdate);
+		window.videoPlayer.onUpdateDuration(handleDurationUpdate);
+
+		return () => {
+			window.videoPlayer.removeUpdateCurrentTimeListener(handleTimeUpdate);
+			window.videoPlayer.removeUpdateDurationListener(handleDurationUpdate);
+		}
+	}, [])
 
 	const handleViewReduxStore = () => {
 		setIsReduxStoreOpen(true)

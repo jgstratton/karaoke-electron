@@ -16,7 +16,7 @@ export default function VideoPreview() {
 				<VideoPlayer
 					currentVideo={playerState.currentVideo}
 					isPlaying={playerState.isPlaying}
-					startingTime={playerState.startingTime}
+					startingTime={playerState.currentTime}
 					volume={0}
 					onVideoEnd={() => {}}
 					onTimeUpdate={() => {}}

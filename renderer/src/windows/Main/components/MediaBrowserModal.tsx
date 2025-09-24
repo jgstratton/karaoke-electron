@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import PouchDB from 'pouchdb-browser'
 import Modal, { modalStyles } from '../../../components/shared/Modal'
 import styles from './MediaBrowserModal.module.css'
+import PlayerMediator from '@/mediators/PlayerMediator'
 
 const db = new PouchDB('karaoke-db')
 
@@ -122,9 +123,7 @@ export default function MediaBrowserModal({ isOpen, onClose }: MediaBrowserModal
 	}
 
 	const playVideo = (filePath: string) => {
-		if (window.videoPlayer?.startNewVideo) {
-			window.videoPlayer.startNewVideo(filePath)
-		}
+		PlayerMediator.StartNewVideo(filePath);
 	}
 
 	const allExtensions = [...new Set(mediaFiles.map((f: any) => f.extension))].sort()

@@ -1,16 +1,15 @@
 import { RootState } from "@/windows/main/store";
-import { useAppDispatch } from "@/windows/main/store/hooks";
-import { play, pause, setVolume } from "@/windows/main/store/slices/playerSlice";
 import { useSelector } from "react-redux";
 import PlayerMediator from "@/mediators/PlayerMediator";
 import styles from './VideoControlsPanel.module.css';
 
 // todo, use mediator that will send info to other windows and update state
 export default function VideoControlsPanel() {
-	const dispatch = useAppDispatch()
 	const playerState = useSelector((state: RootState) => state.player);
 
 	const sendVideoPosition = (position: number) => {
+		// Temporarily suppress unused parameter warning
+		console.log('sendVideoPosition called with:', position);
 		//todo: implement video position sending
 	}
 
@@ -46,16 +45,6 @@ export default function VideoControlsPanel() {
 						<button className={`${styles.videoControlBtn} ${styles.secondary}`}>
 							⏭️ Next
 						</button>
-						<button
-							className={`${styles.videoControlBtn} ${styles.secondary}`}
-							onClick={() => {
-								if (window.videoPlayer?.toggleFullscreen) {
-									window.videoPlayer.toggleFullscreen();
-								}
-							}}
-						>
-							🖥️ Fullscreen
-						</button>
 					</div>
 				</div>
 
@@ -69,14 +58,14 @@ export default function VideoControlsPanel() {
 								const clickX = e.clientX - rect.left;
 								const percentage = clickX / rect.width;
 								const seekTime = percentage * playerState.duration;
-								sendVideoPosition(seekTime);
+								PlayerMediator.SetStartingTime(seekTime);
 							}}
 							style={{ cursor: 'pointer', position: 'relative' }}
 						>
 							<div
 								className={styles.videoProgressFill}
 								style={{
-									width: `${playerState.duration > 0 ? (playerState.startingTime / playerState.duration) * 100 : 0}%`
+									width: `${playerState.duration > 0 ? (playerState.currentTime / playerState.duration) * 100 : 0}%`
 								}}
 							/>
 						</div>
@@ -104,9 +93,6 @@ export default function VideoControlsPanel() {
 							/>
 							<span style={{ width: '60px' }}>{Math.round(playerState.volume * 100)}%</span>
 						</div>
-						<button className={`${styles.videoControlBtn} ${styles.secondary}`}>
-							🖥️ Toggle Fullscreen
-						</button>
 					</div>
 				</div>
 			</div>

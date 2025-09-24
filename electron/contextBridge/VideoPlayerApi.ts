@@ -3,6 +3,7 @@ import { ipcRenderer } from "electron"
 export const EVENT_PAUSE_VIDEO = "pause-video";
 export const EVENT_UNPAUSE_VIDEO = "unpause-video";
 export const EVENT_SET_VOLUME = "set-volume";
+export const EVENT_SET_STARTING_TIME = "set-starting-time";
 
 // Video Player API
 export interface IVideoPlayerAPI {
@@ -13,6 +14,7 @@ export interface IVideoPlayerAPI {
 	pauseVideo: () => void
 	changeVolume: (volume: number) => void
 	updateCurrentTime: (currentTime: number) => void
+	updateStartingTime: (startingTime: number) => void
 	updateDuration: (duration: number) => void
 
 	// event listeners
@@ -21,6 +23,7 @@ export interface IVideoPlayerAPI {
 	onUnpauseVideo: (callback: (event: Electron.IpcRendererEvent) => void) => void
 	onVolumeChange: (callback: (event: Electron.IpcRendererEvent, volume: number) => void) => void
 	onUpdateCurrentTime: (callback: (event: Electron.IpcRendererEvent, currentTime: number) => void) => void
+	onUpdateStartingTime: (callback: (event: Electron.IpcRendererEvent, startingTime: number) => void) => void
 	onUpdateDuration: (callback: (event: Electron.IpcRendererEvent, duration: number) => void) => void
 
 	//remove event listeners
@@ -29,6 +32,7 @@ export interface IVideoPlayerAPI {
 	removeUnpauseVideoListener: (callback: (event: Electron.IpcRendererEvent) => void) => void
 	removeVolumeChangeListener: (callback: (event: Electron.IpcRendererEvent, volume: number) => void) => void
 	removeUpdateCurrentTimeListener: (callback: (event: Electron.IpcRendererEvent, currentTime: number) => void) => void
+	removeUpdateStartingTimeListener: (callback: (event: Electron.IpcRendererEvent, startingTime: number) => void) => void
 	removeUpdateDurationListener: (callback: (event: Electron.IpcRendererEvent, duration: number) => void) => void
 	toggleFullscreen: () => Promise<void>
 }
@@ -44,6 +48,7 @@ export const VideoPlayerAPI: IVideoPlayerAPI = {
 	unpauseVideo: () => ipcRenderer.send(EVENT_UNPAUSE_VIDEO),
 	changeVolume: (volume) => ipcRenderer.send(EVENT_SET_VOLUME, volume),
 	updateCurrentTime: (currentTime) => ipcRenderer.send('set-current-time', currentTime),
+	updateStartingTime: (startingTime) => ipcRenderer.send(EVENT_SET_STARTING_TIME, startingTime),
 	updateDuration: (duration) => ipcRenderer.send('set-duration', duration),
 
 	// event listeners
@@ -62,6 +67,9 @@ export const VideoPlayerAPI: IVideoPlayerAPI = {
 	},
 	onUpdateCurrentTime: (callback) => {
 		ipcRenderer.on('set-current-time', callback)
+	},
+	onUpdateStartingTime: (callback) => {
+		ipcRenderer.on(EVENT_SET_STARTING_TIME, callback)
 	},
 	onUpdateDuration: (callback) => {
 		ipcRenderer.on('set-duration', callback)
@@ -82,6 +90,9 @@ export const VideoPlayerAPI: IVideoPlayerAPI = {
 	},
 	removeUpdateCurrentTimeListener: (callback) => {
 		ipcRenderer.removeListener('set-current-time', callback)
+	},
+	removeUpdateStartingTimeListener: (callback) => {
+		ipcRenderer.removeListener(EVENT_SET_STARTING_TIME, callback)
 	},
 	removeUpdateDurationListener: (callback) => {
 		ipcRenderer.removeListener('set-duration', callback)
