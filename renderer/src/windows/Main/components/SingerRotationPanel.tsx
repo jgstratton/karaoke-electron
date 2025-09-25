@@ -1,6 +1,10 @@
+import { useSelector } from 'react-redux'
+import { RootState } from '../store'
 import styles from './SingerRotationPanel.module.css';
 
 export default function SingerRotationPanel() {
+	const { currentParty } = useSelector((state: RootState) => state.party)
+	const singers = currentParty?.singers || []
 	return (
 		<>
 			<div className={styles.singerHeader}>
@@ -10,30 +14,23 @@ export default function SingerRotationPanel() {
 				<span></span>
 			</div>
 			<div className={styles.singerList}>
-				<div className={`${styles.singerItem} ${styles.currentSinger}`}>
-					<span className={styles.singerAvatar}>1</span>
-					<span className={styles.singerName}>John Smith</span>
-					<span></span>
-					<span className={styles.showOnHover}>⋯</span>
-				</div>
-				<div className={styles.singerItem}>
-					<span className={styles.singerAvatar}>2</span>
-					<span className={styles.singerName}>Alice Brown</span>
-					<span></span>
-					<span className={styles.showOnHover}>⋯</span>
-				</div>
-				<div className={styles.singerItem}>
-					<span className={styles.singerAvatar}>3</span>
-					<span className={styles.singerName}>Mike Johnson</span>
-					<span></span>
-					<span className={styles.showOnHover}>⋯</span>
-				</div>
-				<div className={styles.singerItem}>
-					<span className={styles.singerAvatar}>4</span>
-					<span className={styles.singerName}>Sarah Davis</span>
-					<span></span>
-					<span className={styles.showOnHover}>⋯</span>
-				</div>
+				{singers.length === 0 && (
+					<div className={styles.emptySingers}>
+						<p>No singers in rotation</p>
+						<p>Use Party → Add Singer to add singers</p>
+					</div>
+				)}
+				{singers.map((singer, index) => (
+					<div
+						key={singer._id}
+						className={`${styles.singerItem} ${index === 0 ? styles.currentSinger : ''}`}
+					>
+						<span className={styles.singerAvatar}>{index + 1}</span>
+						<span className={styles.singerName}>{singer.name}</span>
+						<span></span>
+						<span className={styles.showOnHover}>⋯</span>
+					</div>
+				))}
 			</div>
 		</>
 	)

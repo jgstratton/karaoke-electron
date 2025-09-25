@@ -9,7 +9,12 @@ class PartyMediatorClass {
 	async loadAllParties(): Promise<PartyDoc[]> {
 		try {
 			const partiesDoc = await db.get('parties') as PartiesDoc
-			return partiesDoc.parties
+			// Ensure backward compatibility: add singers array if it doesn't exist
+			const parties = partiesDoc.parties.map(party => ({
+				...party,
+				singers: party.singers || []
+			}))
+			return parties
 		} catch (err: any) {
 			if (err.status === 404) {
 				// Parties document doesn't exist yet, create it
@@ -40,7 +45,8 @@ class PartyMediatorClass {
 		const newParty: PartyDoc = {
 			_id: `party_${Date.now()}`,
 			name,
-			creationDate: new Date().toISOString()
+			creationDate: new Date().toISOString(),
+			singers: []
 		}
 
 		try {
@@ -80,6 +86,41 @@ class PartyMediatorClass {
 		return store.getState().party.currentParty
 	}
 
+	async updatePartyName(partyId: string, newName: string): Promise<void> {
+		try {
+			// Get current parties document
+			let partiesDoc: PartiesDoc
+			try {
+				partiesDoc = await db.get('parties') as PartiesDoc
+			} catch (err: any) {
+				if (err.status === 404) {
+					throw new Error('No parties found')
+				}
+				throw err
+			}
+
+			// Find and update the party
+			const party = partiesDoc.parties.find(p => p._id === partyId)
+			if (!party) {
+				throw new Error('Party not found')
+			}
+
+			party.name = newName
+
+			// Save updated parties document
+			await db.put(partiesDoc)
+
+			// Update Redux store if this is the current party
+			const currentParty = this.getCurrentParty()
+			if (currentParty && currentParty._id === partyId) {
+				store.dispatch(setCurrentParty({ ...currentParty, name: newName }))
+			}
+		} catch (err) {
+			console.error('Failed to update party name:', err)
+			throw err
+		}
+	}
+
 	async deleteParty(partyId: string): Promise<void> {
 		try {
 			let partiesDoc: PartiesDoc
@@ -105,6 +146,54 @@ class PartyMediatorClass {
 			}
 		} catch (err) {
 			console.error('Failed to delete party:', err)
+			throw err
+		}
+	}
+
+	async addSingerToParty(partyId: string, singerName: string): Promise<void> {
+		try {
+			// Get current parties document
+			let partiesDoc: PartiesDoc
+			try {
+				partiesDoc = await db.get('parties') as PartiesDoc
+			} catch (err: any) {
+				if (err.status === 404) {
+					throw new Error('No parties found')
+				}
+				throw err
+			}
+
+			// Find the party
+			const party = partiesDoc.parties.find(p => p._id === partyId)
+			if (!party) {
+				throw new Error('Party not found')
+			}
+
+			// Create new singer
+			const newSinger = {
+				_id: `singer_${Date.now()}`,
+				name: singerName.trim(),
+				addedDate: new Date().toISOString()
+			}
+
+			// Initialize singers array if it doesn't exist (for backwards compatibility)
+			if (!party.singers) {
+				party.singers = []
+			}
+
+			// Add singer to the party
+			party.singers.push(newSinger)
+
+			// Save updated parties document
+			await db.put(partiesDoc)
+
+			// Update Redux store if this is the current party
+			const currentParty = this.getCurrentParty()
+			if (currentParty && currentParty._id === partyId) {
+				store.dispatch(setCurrentParty({ ...currentParty, singers: party.singers }))
+			}
+		} catch (err) {
+			console.error('Failed to add singer to party:', err)
 			throw err
 		}
 	}

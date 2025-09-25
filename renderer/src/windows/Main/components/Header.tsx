@@ -10,9 +10,11 @@ interface HeaderProps {
 	onOpenMediaBrowser: () => void
 	onCreateParty: () => void
 	onLoadParty: () => void
+	onEditPartyDetails: () => void
+	onAddSinger: () => void
 }
 
-export default function Header({ onOpenSettings, onViewReduxStore, onOpenDatabaseExplorer, onOpenMediaBrowser, onCreateParty, onLoadParty }: HeaderProps) {
+export default function Header({ onOpenSettings, onViewReduxStore, onOpenDatabaseExplorer, onOpenMediaBrowser, onCreateParty, onLoadParty, onEditPartyDetails, onAddSinger }: HeaderProps) {
 	const [showToolsMenu, setShowToolsMenu] = useState(false)
 	const [showPartyMenu, setShowPartyMenu] = useState(false)
 	const { currentParty } = useSelector((state: RootState) => state.party)
@@ -57,6 +59,30 @@ export default function Header({ onOpenSettings, onViewReduxStore, onOpenDatabas
 							>
 								<i className="fas fa-folder-open"></i> Load Existing Party
 							</div>
+							{currentParty && (
+								<>
+									<div className={styles.dropdownDivider}></div>
+									<div
+										className={styles.dropdownItem}
+										onClick={() => {
+											onEditPartyDetails()
+											setShowPartyMenu(false)
+										}}
+									>
+										<i className="fas fa-edit"></i> Edit Party Details
+									</div>
+									<div
+										className={styles.dropdownItem}
+										onClick={() => {
+											onAddSinger()
+											setShowPartyMenu(false)
+										}}
+									>
+										<i className="fas fa-user-plus"></i> Add Singer to Rotation
+									</div>
+
+								</>
+							)}
 						</div>
 					)}
 				</div>
@@ -123,7 +149,7 @@ export default function Header({ onOpenSettings, onViewReduxStore, onOpenDatabas
 					<span>No Party Selected</span>
 				)}
 				<span>•</span>
-				<span>Singers: 4</span>
+				<span>Singers: {currentParty?.singers?.length || 0}</span>
 				<span>•</span>
 				<span>Queue: 4 songs</span>
 			</div>

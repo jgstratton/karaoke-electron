@@ -104,6 +104,23 @@
 	visibility: visible;
 }
 
+/* Empty Singers State */
+.emptySingers {
+	padding: 20px;
+	text-align: center;
+	color: #6c757d;
+	font-style: italic;
+}
+
+.emptySingers p {
+	margin: 5px 0;
+}
+
+.emptySingers p:first-child {
+	font-weight: bold;
+	color: #adb5bd;
+}
+
 /* Responsive Styles */
 @media (max-width: 1300px) {
 	.singerItem,
@@ -112,5 +129,10 @@
 		padding: 5px;
 		grid-template-columns: 25px auto 100px 30px;
 		font-size: 12px;
+	}
+
+	.emptySingers {
+		padding: 15px;
+		font-size: 11px;
 	}
 }

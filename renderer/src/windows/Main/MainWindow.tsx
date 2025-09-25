@@ -13,6 +13,8 @@ import DatabaseExplorerModal from "./components/DatabaseExplorerModal"
 import MediaBrowserModal from "./components/MediaBrowserModal"
 import PartyModal from "./components/PartyModal"
 import LoadPartyModal from "./components/LoadPartyModal"
+import PartyDetailsModal from "./components/PartyDetailsModal"
+import AddSingerModal from "./components/AddSingerModal"
 import PlayerMediator from "../../mediators/PlayerMediator"
 import PartyMediator from "../../mediators/PartyMediator"
 import styles from "./MainWindow.module.css"
@@ -24,7 +26,10 @@ export default function MainWindow() {
 	const [isMediaBrowserOpen, setIsMediaBrowserOpen] = useState(false)
 	const [isPartyModalOpen, setIsPartyModalOpen] = useState(false)
 	const [isLoadPartyModalOpen, setIsLoadPartyModalOpen] = useState(false)
+	const [isPartyDetailsModalOpen, setIsPartyDetailsModalOpen] = useState(false)
+	const [isAddSingerModalOpen, setIsAddSingerModalOpen] = useState(false)
 	const reduxState = useSelector((state: RootState) => state)
+	const currentParty = useSelector((state: RootState) => state.party.currentParty)
 
 	useEffect(() => {
 		if (!window.videoPlayer) {
@@ -69,6 +74,26 @@ export default function MainWindow() {
 		await PartyMediator.setCurrentParty(newParty)
 	}
 
+	const handleEditPartyDetails = () => {
+		setIsPartyDetailsModalOpen(true)
+	}
+
+	const handlePartyNameUpdate = async (newName: string) => {
+		if (currentParty) {
+			await PartyMediator.updatePartyName(currentParty._id, newName)
+		}
+	}
+
+	const handleAddSinger = () => {
+		setIsAddSingerModalOpen(true)
+	}
+
+	const handleSingerAdded = async (singerName: string) => {
+		if (currentParty) {
+			await PartyMediator.addSingerToParty(currentParty._id, singerName)
+		}
+	}
+
 	return (
 		<div className={styles.mainLayout}>
 			<div className={styles.header}>
@@ -79,6 +104,8 @@ export default function MainWindow() {
 					onOpenMediaBrowser={() => setIsMediaBrowserOpen(true)}
 					onCreateParty={handleCreateParty}
 					onLoadParty={handleLoadParty}
+					onEditPartyDetails={handleEditPartyDetails}
+					onAddSinger={handleAddSinger}
 				/>
 			</div>
 
@@ -129,6 +156,19 @@ export default function MainWindow() {
 				isOpen={isLoadPartyModalOpen}
 				onClose={() => setIsLoadPartyModalOpen(false)}
 				onLoadParty={handlePartyLoaded}
+			/>
+
+			<PartyDetailsModal
+				isOpen={isPartyDetailsModalOpen}
+				onClose={() => setIsPartyDetailsModalOpen(false)}
+				party={currentParty}
+				onSave={handlePartyNameUpdate}
+			/>
+
+			<AddSingerModal
+				isOpen={isAddSingerModalOpen}
+				onClose={() => setIsAddSingerModalOpen(false)}
+				onSave={handleSingerAdded}
 			/>
 		</div>
 	)

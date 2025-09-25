@@ -159,3 +159,12 @@
 	color: #28a745;
 	font-weight: 600;
 }
+
+.dropdownItem.disabled {
+	color: #6c757d;
+	cursor: not-allowed;
+}
+
+.dropdownItem.disabled:hover {
+	background: transparent;
+}

@@ -24,11 +24,18 @@ export interface SettingsDoc {
 	mediaPath: string
 }
 
+export interface SingerDoc {
+	_id: string
+	name: string
+	addedDate: string
+}
+
 export interface PartyDoc {
 	_id: string
 	_rev?: string
 	name: string
 	creationDate: string
+	singers: SingerDoc[]
 }
 
 export interface PartiesDoc {

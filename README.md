@@ -1,9 +1,5 @@
 # Karaoke Electron (Electron + React + PouchDB)
 
-A minimal Electron desktop app scaffold using React for the UI and PouchDB for local data. The app displays a greeting from a local PouchDB database: `Hello, Name`.
-
-On first run, a default user document is created with `name = "World"`.
-
 ## Prerequisites
 
 - Node.js 18+ and npm
