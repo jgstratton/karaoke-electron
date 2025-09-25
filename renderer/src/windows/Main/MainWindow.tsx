@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react"
 import { useSelector } from "react-redux"
 import { RootState } from "./store"
+import { PartyDoc } from "@/types"
 import SingerRotationPanel from "./components/SingerRotationPanel"
 import VideoControlsPanel from "./components/VideoControlsPanel"
 import VideoPreview from "./components/VideoPreview"
@@ -11,6 +12,7 @@ import ReduxStoreModal from "./components/ReduxStoreModal"
 import DatabaseExplorerModal from "./components/DatabaseExplorerModal"
 import MediaBrowserModal from "./components/MediaBrowserModal"
 import PartyModal from "./components/PartyModal"
+import LoadPartyModal from "./components/LoadPartyModal"
 import PlayerMediator from "../../mediators/PlayerMediator"
 import PartyMediator from "../../mediators/PartyMediator"
 import styles from "./MainWindow.module.css"
@@ -21,6 +23,7 @@ export default function MainWindow() {
 	const [isDatabaseExplorerOpen, setIsDatabaseExplorerOpen] = useState(false)
 	const [isMediaBrowserOpen, setIsMediaBrowserOpen] = useState(false)
 	const [isPartyModalOpen, setIsPartyModalOpen] = useState(false)
+	const [isLoadPartyModalOpen, setIsLoadPartyModalOpen] = useState(false)
 	const reduxState = useSelector((state: RootState) => state)
 
 	useEffect(() => {
@@ -45,11 +48,6 @@ export default function MainWindow() {
 		}
 	}, [])
 
-	useEffect(() => {
-		// Load parties on component mount
-		PartyMediator.loadParties()
-	}, [])
-
 	const handleViewReduxStore = () => {
 		setIsReduxStoreOpen(true)
 	}
@@ -58,12 +56,12 @@ export default function MainWindow() {
 		setIsPartyModalOpen(true)
 	}
 
-	const handleSelectParty = async (partyId: string) => {
-		const parties = PartyMediator.getParties()
-		const party = parties.find(p => p._id === partyId)
-		if (party) {
-			await PartyMediator.setCurrentParty(party)
-		}
+	const handleLoadParty = () => {
+		setIsLoadPartyModalOpen(true)
+	}
+
+	const handlePartyLoaded = async (party: PartyDoc) => {
+		await PartyMediator.setCurrentParty(party)
 	}
 
 	const handlePartyCreation = async (name: string) => {
@@ -80,7 +78,7 @@ export default function MainWindow() {
 					onOpenDatabaseExplorer={() => setIsDatabaseExplorerOpen(true)}
 					onOpenMediaBrowser={() => setIsMediaBrowserOpen(true)}
 					onCreateParty={handleCreateParty}
-					onSelectParty={handleSelectParty}
+					onLoadParty={handleLoadParty}
 				/>
 			</div>
 
@@ -125,6 +123,12 @@ export default function MainWindow() {
 				isOpen={isPartyModalOpen}
 				onClose={() => setIsPartyModalOpen(false)}
 				onCreateParty={handlePartyCreation}
+			/>
+
+			<LoadPartyModal
+				isOpen={isLoadPartyModalOpen}
+				onClose={() => setIsLoadPartyModalOpen(false)}
+				onLoadParty={handlePartyLoaded}
 			/>
 		</div>
 	)

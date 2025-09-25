@@ -131,6 +131,16 @@
 	background: rgba(40, 167, 69, 0.9);
 }
 
+.dropdownItem.currentParty {
+	background: rgba(40, 167, 69, 0.2);
+	color: white;
+	cursor: default;
+}
+
+.dropdownItem.currentParty:hover {
+	background: rgba(40, 167, 69, 0.2);
+}
+
 .partyDate {
 	display: block;
 	font-size: 0.75rem;
@@ -143,4 +153,9 @@
 	align-items: center;
 	gap: 10px;
 	color: #6c757d;
+}
+
+.controls span:first-child {
+	color: #28a745;
+	font-weight: 600;
 }

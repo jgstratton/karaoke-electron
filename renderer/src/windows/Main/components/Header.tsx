@@ -9,13 +9,13 @@ interface HeaderProps {
 	onOpenDatabaseExplorer: () => void
 	onOpenMediaBrowser: () => void
 	onCreateParty: () => void
-	onSelectParty: (partyId: string) => void
+	onLoadParty: () => void
 }
 
-export default function Header({ onOpenSettings, onViewReduxStore, onOpenDatabaseExplorer, onOpenMediaBrowser, onCreateParty, onSelectParty }: HeaderProps) {
+export default function Header({ onOpenSettings, onViewReduxStore, onOpenDatabaseExplorer, onOpenMediaBrowser, onCreateParty, onLoadParty }: HeaderProps) {
 	const [showToolsMenu, setShowToolsMenu] = useState(false)
 	const [showPartyMenu, setShowPartyMenu] = useState(false)
-	const { parties, currentParty } = useSelector((state: RootState) => state.party)
+	const { currentParty } = useSelector((state: RootState) => state.party)
 
 	return (
 		<>
@@ -48,29 +48,15 @@ export default function Header({ onOpenSettings, onViewReduxStore, onOpenDatabas
 							>
 								<i className="fas fa-plus"></i> Create New Party
 							</div>
-							{parties.length > 0 && (
-								<>
-									<div className={styles.dropdownDivider}></div>
-									<div className={styles.dropdownHeader}>Select Party:</div>
-									{parties.map((party) => (
-										<div
-											key={party._id}
-											className={`${styles.dropdownItem} ${
-												currentParty?._id === party._id ? styles.active : ''
-											}`}
-											onClick={() => {
-												onSelectParty(party._id)
-												setShowPartyMenu(false)
-											}}
-										>
-											<i className="fas fa-calendar"></i> {party.name}
-											<small className={styles.partyDate}>
-												{new Date(party.creationDate).toLocaleDateString()}
-											</small>
-										</div>
-									))}
-								</>
-							)}
+							<div
+								className={styles.dropdownItem}
+								onClick={() => {
+									onLoadParty()
+									setShowPartyMenu(false)
+								}}
+							>
+								<i className="fas fa-folder-open"></i> Load Existing Party
+							</div>
 						</div>
 					)}
 				</div>
@@ -127,7 +113,15 @@ export default function Header({ onOpenSettings, onViewReduxStore, onOpenDatabas
 			</div>
 
 			<div className={styles.controls}>
-				<span>Session: Active</span>
+				{currentParty ? (
+					<>
+						<span>Party: {currentParty.name}</span>
+						<span>•</span>
+						<span>Created: {new Date(currentParty.creationDate).toLocaleDateString()}</span>
+					</>
+				) : (
+					<span>No Party Selected</span>
+				)}
 				<span>•</span>
 				<span>Singers: 4</span>
 				<span>•</span>
