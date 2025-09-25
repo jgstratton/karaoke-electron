@@ -9,13 +9,14 @@ class PartyMediatorClass {
 	async loadAllParties(): Promise<PartyDoc[]> {
 		try {
 			const partiesDoc = await db.get('parties') as PartiesDoc
-			// Ensure backward compatibility: add singers array if it doesn't exist
+			// Ensure backward compatibility: add singers and requests arrays if they don't exist
 			const parties = partiesDoc.parties.map(party => ({
 				...party,
 				singers: (party.singers || []).map(singer => ({
 					...singer,
 					isPaused: singer.isPaused || false
-				}))
+				})),
+				requests: party.requests || []
 			}))
 			return parties
 		} catch (err: any) {
@@ -49,7 +50,8 @@ class PartyMediatorClass {
 			_id: `party_${Date.now()}`,
 			name,
 			creationDate: new Date().toISOString(),
-			singers: []
+			singers: [],
+			requests: []
 		}
 
 		try {

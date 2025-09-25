@@ -123,6 +123,23 @@
 	visibility: visible;
 }
 
+/* Empty Queue State */
+.emptyQueue {
+	padding: 20px;
+	text-align: center;
+	color: #6c757d;
+	font-style: italic;
+}
+
+.emptyQueue p {
+	margin: 5px 0;
+}
+
+.emptyQueue p:first-child {
+	font-weight: bold;
+	color: #adb5bd;
+}
+
 /* Responsive Styles */
 @media (max-width: 1300px) {
 	.queueItem,
@@ -131,6 +148,11 @@
 		padding: 5px;
 		grid-template-columns: 25px 200px 250px auto 125px 30px;
 		font-size: 12px;
+	}
+
+	.emptyQueue {
+		padding: 15px;
+		font-size: 11px;
 	}
 }
 

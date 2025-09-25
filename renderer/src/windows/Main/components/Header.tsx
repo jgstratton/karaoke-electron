@@ -12,9 +12,10 @@ interface HeaderProps {
 	onLoadParty: () => void
 	onEditPartyDetails: () => void
 	onAddSinger: () => void
+	onAddRequest: () => void
 }
 
-export default function Header({ onOpenSettings, onViewReduxStore, onOpenDatabaseExplorer, onOpenMediaBrowser, onCreateParty, onLoadParty, onEditPartyDetails, onAddSinger }: HeaderProps) {
+export default function Header({ onOpenSettings, onViewReduxStore, onOpenDatabaseExplorer, onOpenMediaBrowser, onCreateParty, onLoadParty, onEditPartyDetails, onAddSinger, onAddRequest }: HeaderProps) {
 	const [showToolsMenu, setShowToolsMenu] = useState(false)
 	const [showPartyMenu, setShowPartyMenu] = useState(false)
 	const { currentParty } = useSelector((state: RootState) => state.party)
@@ -79,6 +80,15 @@ export default function Header({ onOpenSettings, onViewReduxStore, onOpenDatabas
 										}}
 									>
 										<i className="fas fa-user-plus"></i> Add Singer to Rotation
+									</div>
+									<div
+										className={styles.dropdownItem}
+										onClick={() => {
+											onAddRequest()
+											setShowPartyMenu(false)
+										}}
+									>
+										<i className="fas fa-music"></i> Add Song Request
 									</div>
 
 								</>
@@ -151,7 +161,7 @@ export default function Header({ onOpenSettings, onViewReduxStore, onOpenDatabas
 				<span>•</span>
 				<span>Singers: {currentParty?.singers?.length || 0}</span>
 				<span>•</span>
-				<span>Queue: 4 songs</span>
+				<span>Queue: {currentParty?.requests?.length || 0} songs</span>
 			</div>
 		</>
 	)

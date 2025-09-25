@@ -16,8 +16,10 @@ import LoadPartyModal from "./components/LoadPartyModal"
 import PartyDetailsModal from "./components/PartyDetailsModal"
 import AddSingerModal from "./components/AddSingerModal"
 import SingerDetailsModal from "./components/SingerDetailsModal"
+import AddRequestModal from "./components/AddRequestModal"
 import PlayerMediator from "../../mediators/PlayerMediator"
 import PartyMediator from "../../mediators/PartyMediator"
+import RequestMediator from "../../mediators/RequestMediator"
 import styles from "./MainWindow.module.css"
 
 export default function MainWindow() {
@@ -30,6 +32,7 @@ export default function MainWindow() {
 	const [isPartyDetailsModalOpen, setIsPartyDetailsModalOpen] = useState(false)
 	const [isAddSingerModalOpen, setIsAddSingerModalOpen] = useState(false)
 	const [isSingerDetailsModalOpen, setIsSingerDetailsModalOpen] = useState(false)
+	const [isAddRequestModalOpen, setIsAddRequestModalOpen] = useState(false)
 	const [selectedSinger, setSelectedSinger] = useState<SingerDoc | null>(null)
 	const reduxState = useSelector((state: RootState) => state)
 	const currentParty = useSelector((state: RootState) => state.party.currentParty)
@@ -120,6 +123,19 @@ export default function MainWindow() {
 		}
 	}
 
+	const handleAddRequest = () => {
+		setIsAddRequestModalOpen(true)
+	}
+
+	const handleRequestAdded = async (singerId: string, mediaFilePath: string, songTitle: string) => {
+		if (currentParty) {
+			const singer = currentParty.singers.find(s => s._id === singerId)
+			if (singer) {
+				await RequestMediator.addRequest(currentParty._id, singerId, singer.name, mediaFilePath, songTitle)
+			}
+		}
+	}
+
 	return (
 		<div className={styles.mainLayout}>
 			<div className={styles.header}>
@@ -132,6 +148,7 @@ export default function MainWindow() {
 					onLoadParty={handleLoadParty}
 					onEditPartyDetails={handleEditPartyDetails}
 					onAddSinger={handleAddSinger}
+					onAddRequest={handleAddRequest}
 				/>
 			</div>
 
@@ -208,6 +225,12 @@ export default function MainWindow() {
 				allSingers={currentParty?.singers || []}
 				onSave={handleSingerUpdate}
 				onDelete={handleSingerDelete}
+			/>
+
+			<AddRequestModal
+				isOpen={isAddRequestModalOpen}
+				onClose={() => setIsAddRequestModalOpen(false)}
+				onSave={handleRequestAdded}
 			/>
 		</div>
 	)

@@ -24,11 +24,21 @@ export interface SettingsDoc {
 	mediaPath: string
 }
 
+export interface RequestDoc {
+	_id: string
+	songTitle: string
+	mediaFilePath: string
+	status: 'queued' | 'playing' | 'completed' | 'skipped'
+	addedDate: string
+	sortOrder: number
+}
+
 export interface SingerDoc {
 	_id: string
 	name: string
 	addedDate: string
 	isPaused?: boolean
+	requests?: RequestDoc[]
 }
 
 export interface PartyDoc {
