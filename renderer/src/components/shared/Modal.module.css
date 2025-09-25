@@ -236,3 +236,60 @@
 	padding: 20px;
 	margin: 0;
 }
+
+/* Delete Button */
+.deleteButton {
+	background: #dc3545;
+	color: white;
+	border: 1px solid #dc3545;
+	padding: 10px 16px;
+	border-radius: 4px;
+	font-size: 0.9rem;
+	cursor: pointer;
+	transition: background-color 0.2s;
+}
+
+.deleteButton:hover {
+	background: #c82333;
+	border-color: #c82333;
+}
+
+.deleteButton:disabled {
+	background: #6c757d;
+	border-color: #6c757d;
+	cursor: not-allowed;
+	opacity: 0.65;
+}
+
+/* Checkbox Styles */
+.checkboxLabel {
+	display: flex;
+	align-items: center;
+	cursor: pointer;
+	font-size: 0.9rem;
+}
+
+.checkbox {
+	margin-right: 8px;
+	accent-color: #0d6efd;
+}
+
+.checkboxText {
+	color: #f0f6fc;
+}
+
+/* Info Section */
+.infoSection {
+	margin-top: 16px;
+	padding-top: 16px;
+	border-top: 1px solid #2a2f3a;
+}
+
+.warningText {
+	color: #ffc107;
+	font-size: 0.85rem;
+	margin: 8px 0;
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react"
 import { useSelector } from "react-redux"
 import { RootState } from "./store"
-import { PartyDoc } from "@/types"
+import { PartyDoc, SingerDoc } from "@/types"
 import SingerRotationPanel from "./components/SingerRotationPanel"
 import VideoControlsPanel from "./components/VideoControlsPanel"
 import VideoPreview from "./components/VideoPreview"
@@ -15,6 +15,7 @@ import PartyModal from "./components/PartyModal"
 import LoadPartyModal from "./components/LoadPartyModal"
 import PartyDetailsModal from "./components/PartyDetailsModal"
 import AddSingerModal from "./components/AddSingerModal"
+import SingerDetailsModal from "./components/SingerDetailsModal"
 import PlayerMediator from "../../mediators/PlayerMediator"
 import PartyMediator from "../../mediators/PartyMediator"
 import styles from "./MainWindow.module.css"
@@ -28,6 +29,8 @@ export default function MainWindow() {
 	const [isLoadPartyModalOpen, setIsLoadPartyModalOpen] = useState(false)
 	const [isPartyDetailsModalOpen, setIsPartyDetailsModalOpen] = useState(false)
 	const [isAddSingerModalOpen, setIsAddSingerModalOpen] = useState(false)
+	const [isSingerDetailsModalOpen, setIsSingerDetailsModalOpen] = useState(false)
+	const [selectedSinger, setSelectedSinger] = useState<SingerDoc | null>(null)
 	const reduxState = useSelector((state: RootState) => state)
 	const currentParty = useSelector((state: RootState) => state.party.currentParty)
 
@@ -94,6 +97,23 @@ export default function MainWindow() {
 		}
 	}
 
+	const handleSingerClick = (singer: SingerDoc) => {
+		setSelectedSinger(singer)
+		setIsSingerDetailsModalOpen(true)
+	}
+
+	const handleSingerUpdate = async (singerId: string, updatedData: { name?: string; isPaused?: boolean }) => {
+		if (currentParty) {
+			await PartyMediator.updateSinger(currentParty._id, singerId, updatedData)
+		}
+	}
+
+	const handleSingerDelete = async (singerId: string) => {
+		if (currentParty) {
+			await PartyMediator.deleteSinger(currentParty._id, singerId)
+		}
+	}
+
 	return (
 		<div className={styles.mainLayout}>
 			<div className={styles.header}>
@@ -110,7 +130,7 @@ export default function MainWindow() {
 			</div>
 
 			<div className={styles.singerRotationPanel}>
-				<SingerRotationPanel />
+				<SingerRotationPanel onSingerClick={handleSingerClick} />
 			</div>
 
 			<div className={styles.videoControlsSection}>
@@ -169,6 +189,14 @@ export default function MainWindow() {
 				isOpen={isAddSingerModalOpen}
 				onClose={() => setIsAddSingerModalOpen(false)}
 				onSave={handleSingerAdded}
+			/>
+
+			<SingerDetailsModal
+				isOpen={isSingerDetailsModalOpen}
+				onClose={() => setIsSingerDetailsModalOpen(false)}
+				singer={selectedSinger}
+				onSave={handleSingerUpdate}
+				onDelete={handleSingerDelete}
 			/>
 		</div>
 	)

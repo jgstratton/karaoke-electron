@@ -12,7 +12,10 @@ class PartyMediatorClass {
 			// Ensure backward compatibility: add singers array if it doesn't exist
 			const parties = partiesDoc.parties.map(party => ({
 				...party,
-				singers: party.singers || []
+				singers: (party.singers || []).map(singer => ({
+					...singer,
+					isPaused: singer.isPaused || false
+				}))
 			}))
 			return parties
 		} catch (err: any) {
@@ -194,6 +197,99 @@ class PartyMediatorClass {
 			}
 		} catch (err) {
 			console.error('Failed to add singer to party:', err)
+			throw err
+		}
+	}
+
+	async updateSinger(partyId: string, singerId: string, updatedData: { name?: string; isPaused?: boolean }): Promise<void> {
+		try {
+			// Get current parties document
+			let partiesDoc: PartiesDoc
+			try {
+				partiesDoc = await db.get('parties') as PartiesDoc
+			} catch (err: any) {
+				if (err.status === 404) {
+					throw new Error('No parties found')
+				}
+				throw err
+			}
+
+			// Find the party
+			const party = partiesDoc.parties.find(p => p._id === partyId)
+			if (!party) {
+				throw new Error('Party not found')
+			}
+
+			// Initialize singers array if it doesn't exist (for backwards compatibility)
+			if (!party.singers) {
+				party.singers = []
+			}
+
+			// Find the singer
+			const singer = party.singers.find(s => s._id === singerId)
+			if (!singer) {
+				throw new Error('Singer not found')
+			}
+
+			// Update singer data
+			if (updatedData.name !== undefined) {
+				singer.name = updatedData.name
+			}
+			if (updatedData.isPaused !== undefined) {
+				singer.isPaused = updatedData.isPaused
+			}
+
+			// Save updated parties document
+			await db.put(partiesDoc)
+
+			// Update Redux store if this is the current party
+			const currentParty = this.getCurrentParty()
+			if (currentParty && currentParty._id === partyId) {
+				store.dispatch(setCurrentParty({ ...currentParty, singers: party.singers }))
+			}
+		} catch (err) {
+			console.error('Failed to update singer:', err)
+			throw err
+		}
+	}
+
+	async deleteSinger(partyId: string, singerId: string): Promise<void> {
+		try {
+			// Get current parties document
+			let partiesDoc: PartiesDoc
+			try {
+				partiesDoc = await db.get('parties') as PartiesDoc
+			} catch (err: any) {
+				if (err.status === 404) {
+					throw new Error('No parties found')
+				}
+				throw err
+			}
+
+			// Find the party
+			const party = partiesDoc.parties.find(p => p._id === partyId)
+			if (!party) {
+				throw new Error('Party not found')
+			}
+
+			// Initialize singers array if it doesn't exist (for backwards compatibility)
+			if (!party.singers) {
+				party.singers = []
+			}
+
+			// Remove singer from the array
+			party.singers = party.singers.filter(singer => singer._id !== singerId)
+
+			// Save updated parties document
+			await db.put(partiesDoc)
+
+			// Update Redux store if this is the current party
+			const currentParty = this.getCurrentParty()
+			if (currentParty && currentParty._id === partyId) {
+				store.dispatch(setCurrentParty({ ...currentParty, singers: party.singers }))
+			}
+		} catch (err) {
+			console.error('Failed to delete singer:', err)
 			throw err
 		}
 	}

@@ -28,6 +28,7 @@ export interface SingerDoc {
 	_id: string
 	name: string
 	addedDate: string
+	isPaused?: boolean
 }
 
 export interface PartyDoc {

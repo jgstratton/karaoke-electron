@@ -61,6 +61,25 @@
 	display: none;
 }
 
+/* Paused Singer */
+.singerItem.pausedSinger {
+	color: #dc3545;
+	opacity: 0.8;
+}
+
+.singerItem.pausedSinger .singerName {
+	color: #dc3545;
+}
+
+.singerItem.pausedSinger .singerAvatar {
+	background: #dc3545;
+	color: white;
+}
+
+.singerItem.pausedSinger:hover {
+	background-color: rgba(220, 53, 69, 0.1);
+}
+
 /* Singer Avatar */
 .singerAvatar {
 	width: 24px;
