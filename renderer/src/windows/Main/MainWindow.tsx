@@ -10,7 +10,9 @@ import SettingsModal from "./components/SettingsModal"
 import ReduxStoreModal from "./components/ReduxStoreModal"
 import DatabaseExplorerModal from "./components/DatabaseExplorerModal"
 import MediaBrowserModal from "./components/MediaBrowserModal"
+import PartyModal from "./components/PartyModal"
 import PlayerMediator from "../../mediators/PlayerMediator"
+import PartyMediator from "../../mediators/PartyMediator"
 import styles from "./MainWindow.module.css"
 
 export default function MainWindow() {
@@ -18,6 +20,7 @@ export default function MainWindow() {
 	const [isReduxStoreOpen, setIsReduxStoreOpen] = useState(false)
 	const [isDatabaseExplorerOpen, setIsDatabaseExplorerOpen] = useState(false)
 	const [isMediaBrowserOpen, setIsMediaBrowserOpen] = useState(false)
+	const [isPartyModalOpen, setIsPartyModalOpen] = useState(false)
 	const reduxState = useSelector((state: RootState) => state)
 
 	useEffect(() => {
@@ -42,8 +45,30 @@ export default function MainWindow() {
 		}
 	}, [])
 
+	useEffect(() => {
+		// Load parties on component mount
+		PartyMediator.loadParties()
+	}, [])
+
 	const handleViewReduxStore = () => {
 		setIsReduxStoreOpen(true)
+	}
+
+	const handleCreateParty = () => {
+		setIsPartyModalOpen(true)
+	}
+
+	const handleSelectParty = async (partyId: string) => {
+		const parties = PartyMediator.getParties()
+		const party = parties.find(p => p._id === partyId)
+		if (party) {
+			await PartyMediator.setCurrentParty(party)
+		}
+	}
+
+	const handlePartyCreation = async (name: string) => {
+		const newParty = await PartyMediator.createParty(name)
+		await PartyMediator.setCurrentParty(newParty)
 	}
 
 	return (
@@ -54,6 +79,8 @@ export default function MainWindow() {
 					onViewReduxStore={handleViewReduxStore}
 					onOpenDatabaseExplorer={() => setIsDatabaseExplorerOpen(true)}
 					onOpenMediaBrowser={() => setIsMediaBrowserOpen(true)}
+					onCreateParty={handleCreateParty}
+					onSelectParty={handleSelectParty}
 				/>
 			</div>
 
@@ -92,6 +119,12 @@ export default function MainWindow() {
 			<MediaBrowserModal
 				isOpen={isMediaBrowserOpen}
 				onClose={() => setIsMediaBrowserOpen(false)}
+			/>
+
+			<PartyModal
+				isOpen={isPartyModalOpen}
+				onClose={() => setIsPartyModalOpen(false)}
+				onCreateParty={handlePartyCreation}
 			/>
 		</div>
 	)

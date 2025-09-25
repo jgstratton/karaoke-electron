@@ -24,6 +24,19 @@ export interface SettingsDoc {
 	mediaPath: string
 }
 
+export interface PartyDoc {
+	_id: string
+	_rev?: string
+	name: string
+	creationDate: string
+}
+
+export interface PartiesDoc {
+	_id: 'parties'
+	_rev?: string
+	parties: PartyDoc[]
+}
+
 export interface VideoPlayerRef {
 	getVideoState: () => import('../../electron/preload-types').VideoState
 	applyVideoState: (state: Partial<import('../../electron/preload-types').VideoState>) => void
