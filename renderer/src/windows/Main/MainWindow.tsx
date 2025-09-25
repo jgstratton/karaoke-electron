@@ -114,6 +114,12 @@ export default function MainWindow() {
 		}
 	}
 
+	const handleSingerReorder = async (reorderedSingers: SingerDoc[]) => {
+		if (currentParty) {
+			await PartyMediator.reorderSingers(currentParty._id, reorderedSingers)
+		}
+	}
+
 	return (
 		<div className={styles.mainLayout}>
 			<div className={styles.header}>
@@ -130,7 +136,10 @@ export default function MainWindow() {
 			</div>
 
 			<div className={styles.singerRotationPanel}>
-				<SingerRotationPanel onSingerClick={handleSingerClick} />
+				<SingerRotationPanel
+					onSingerClick={handleSingerClick}
+					onReorder={handleSingerReorder}
+				/>
 			</div>
 
 			<div className={styles.videoControlsSection}>
@@ -188,6 +197,7 @@ export default function MainWindow() {
 			<AddSingerModal
 				isOpen={isAddSingerModalOpen}
 				onClose={() => setIsAddSingerModalOpen(false)}
+				allSingers={currentParty?.singers || []}
 				onSave={handleSingerAdded}
 			/>
 
@@ -195,6 +205,7 @@ export default function MainWindow() {
 				isOpen={isSingerDetailsModalOpen}
 				onClose={() => setIsSingerDetailsModalOpen(false)}
 				singer={selectedSinger}
+				allSingers={currentParty?.singers || []}
 				onSave={handleSingerUpdate}
 				onDelete={handleSingerDelete}
 			/>

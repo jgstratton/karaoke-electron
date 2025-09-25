@@ -1,7 +1,7 @@
 import PouchDB from 'pouchdb-browser'
 import { store } from '@/windows/main/store'
 import { setCurrentParty } from '@/windows/main/store/slices/partySlice'
-import { PartyDoc, PartiesDoc } from '@/types'
+import { PartyDoc, PartiesDoc, SingerDoc } from '@/types'
 
 const db = new PouchDB('karaoke-db')
 
@@ -290,6 +290,42 @@ class PartyMediatorClass {
 			}
 		} catch (err) {
 			console.error('Failed to delete singer:', err)
+			throw err
+		}
+	}
+
+	async reorderSingers(partyId: string, reorderedSingers: SingerDoc[]): Promise<void> {
+		try {
+			// Get current parties document
+			let partiesDoc: PartiesDoc
+			try {
+				partiesDoc = await db.get('parties') as PartiesDoc
+			} catch (err: any) {
+				if (err.status === 404) {
+					throw new Error('No parties found')
+				}
+				throw err
+			}
+
+			// Find the party
+			const party = partiesDoc.parties.find(p => p._id === partyId)
+			if (!party) {
+				throw new Error('Party not found')
+			}
+
+			// Update the singers array with new order
+			party.singers = reorderedSingers
+
+			// Save updated parties document
+			await db.put(partiesDoc)
+
+			// Update Redux store if this is the current party
+			const currentParty = this.getCurrentParty()
+			if (currentParty && currentParty._id === partyId) {
+				store.dispatch(setCurrentParty({ ...currentParty, singers: reorderedSingers }))
+			}
+		} catch (err) {
+			console.error('Failed to reorder singers:', err)
 			throw err
 		}
 	}

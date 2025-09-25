@@ -6,26 +6,60 @@ interface SingerDetailsModalProps {
 	isOpen: boolean
 	onClose: () => void
 	singer: SingerDoc | null
+	allSingers: SingerDoc[]
 	onSave: (singerId: string, updatedData: { name?: string; isPaused?: boolean }) => Promise<void>
 	onDelete: (singerId: string) => Promise<void>
 }
 
-export default function SingerDetailsModal({ isOpen, onClose, singer, onSave, onDelete }: SingerDetailsModalProps) {
+export default function SingerDetailsModal({ isOpen, onClose, singer, allSingers, onSave, onDelete }: SingerDetailsModalProps) {
 	const [singerName, setSingerName] = useState('')
 	const [isPaused, setIsPaused] = useState(false)
 	const [isSaving, setIsSaving] = useState(false)
 	const [isDeleting, setIsDeleting] = useState(false)
+	const [nameError, setNameError] = useState('')
 
 	useEffect(() => {
 		if (singer && isOpen) {
 			setSingerName(singer.name)
 			setIsPaused(singer.isPaused || false)
+			setNameError('')
 		}
 	}, [singer, isOpen])
 
+	const validateName = (name: string): string => {
+		const trimmedName = name.trim()
+		if (!trimmedName) {
+			return 'Singer name is required'
+		}
+		if (trimmedName.length > 50) {
+			return 'Singer name must be 50 characters or less'
+		}
+		// Check for duplicates (excluding the current singer)
+		const isDuplicate = allSingers.some(s =>
+			s._id !== singer?._id &&
+			s.name.toLowerCase() === trimmedName.toLowerCase()
+		)
+		if (isDuplicate) {
+			return 'A singer with this name already exists'
+		}
+		return ''
+	}
+
+	const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		const newName = e.target.value
+		setSingerName(newName)
+		setNameError(validateName(newName))
+	}
+
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault()
-		if (!singerName.trim() || !singer) return
+		if (!singer) return
+
+		const validation = validateName(singerName)
+		if (validation) {
+			setNameError(validation)
+			return
+		}
 
 		setIsSaving(true)
 		try {
@@ -64,6 +98,7 @@ export default function SingerDetailsModal({ isOpen, onClose, singer, onSave, on
 		if (!isSaving && !isDeleting) {
 			setSingerName(singer?.name || '')
 			setIsPaused(singer?.isPaused || false)
+			setNameError('')
 			onClose()
 		}
 	}
@@ -84,7 +119,7 @@ export default function SingerDetailsModal({ isOpen, onClose, singer, onSave, on
 			<button
 				type="submit"
 				className={modalStyles.primaryButton}
-				disabled={!singerName.trim() || isSaving || isDeleting}
+				disabled={!singerName.trim() || !!nameError || isSaving || isDeleting}
 				form="singer-details-form"
 			>
 				{isSaving ? 'Saving...' : 'Save Changes'}
@@ -118,13 +153,14 @@ export default function SingerDetailsModal({ isOpen, onClose, singer, onSave, on
 						id="singer-name"
 						type="text"
 						value={singerName}
-						onChange={(e) => setSingerName(e.target.value)}
-						className={modalStyles.input}
+						onChange={handleNameChange}
+						className={`${modalStyles.input} ${nameError ? modalStyles.inputError : ''}`}
 						placeholder="Enter singer name"
 						autoFocus
 						disabled={isSaving || isDeleting}
 						maxLength={50}
 					/>
+					{nameError && <span className={modalStyles.errorText}>{nameError}</span>}
 				</div>
 
 				<div className={modalStyles.formGroup}>

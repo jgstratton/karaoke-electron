@@ -26,10 +26,9 @@ export default function Modal({
 	const heightClass = fullHeight ? modalStyles.fullHeight : ''
 
 	return (
-		<div className={modalStyles.overlay} onClick={onClose}>
+		<div className={modalStyles.overlay}>
 			<div
 				className={`${modalStyles.content} ${sizeClass} ${heightClass}`}
-				onClick={(e) => e.stopPropagation()}
 			>
 				<div className={modalStyles.header}>
 					<h2>{title}</h2>

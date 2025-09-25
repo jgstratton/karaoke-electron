@@ -1,24 +1,57 @@
 import React, { useState } from 'react'
 import Modal, { modalStyles } from '../../../components/shared/Modal'
+import { SingerDoc } from '@/types'
 
 interface AddSingerModalProps {
 	isOpen: boolean
 	onClose: () => void
+	allSingers: SingerDoc[]
 	onSave: (singerName: string) => Promise<void>
 }
 
-export default function AddSingerModal({ isOpen, onClose, onSave }: AddSingerModalProps) {
+export default function AddSingerModal({ isOpen, onClose, allSingers, onSave }: AddSingerModalProps) {
 	const [singerName, setSingerName] = useState('')
 	const [isSaving, setIsSaving] = useState(false)
+	const [nameError, setNameError] = useState('')
+
+	const validateName = (name: string): string => {
+		const trimmedName = name.trim()
+		if (!trimmedName) {
+			return 'Singer name is required'
+		}
+		if (trimmedName.length > 50) {
+			return 'Singer name must be 50 characters or less'
+		}
+		// Check for duplicates
+		const isDuplicate = allSingers.some(s =>
+			s.name.toLowerCase() === trimmedName.toLowerCase()
+		)
+		if (isDuplicate) {
+			return 'A singer with this name already exists'
+		}
+		return ''
+	}
+
+	const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		const newName = e.target.value
+		setSingerName(newName)
+		setNameError(validateName(newName))
+	}
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault()
-		if (!singerName.trim()) return
+
+		const validation = validateName(singerName)
+		if (validation) {
+			setNameError(validation)
+			return
+		}
 
 		setIsSaving(true)
 		try {
 			await onSave(singerName.trim())
 			setSingerName('')
+			setNameError('')
 			onClose()
 		} catch (err) {
 			console.error('Failed to add singer:', err)
@@ -31,6 +64,7 @@ export default function AddSingerModal({ isOpen, onClose, onSave }: AddSingerMod
 	const handleClose = () => {
 		if (!isSaving) {
 			setSingerName('')
+			setNameError('')
 			onClose()
 		}
 	}
@@ -40,7 +74,7 @@ export default function AddSingerModal({ isOpen, onClose, onSave }: AddSingerMod
 			<button
 				type="submit"
 				className={modalStyles.primaryButton}
-				disabled={!singerName.trim() || isSaving}
+				disabled={!singerName.trim() || !!nameError || isSaving}
 				form="add-singer-form"
 			>
 				{isSaving ? 'Adding...' : 'Add Singer'}
@@ -72,13 +106,14 @@ export default function AddSingerModal({ isOpen, onClose, onSave }: AddSingerMod
 						id="singer-name"
 						type="text"
 						value={singerName}
-						onChange={(e) => setSingerName(e.target.value)}
-						className={modalStyles.input}
+						onChange={handleNameChange}
+						className={`${modalStyles.input} ${nameError ? modalStyles.inputError : ''}`}
 						placeholder="Enter singer name"
 						autoFocus
 						disabled={isSaving}
 						maxLength={50}
 					/>
+					{nameError && <span className={modalStyles.errorText}>{nameError}</span>}
 				</div>
 				<p className={modalStyles.helpText}>
 					Enter the name of the singer to add to the rotation queue.

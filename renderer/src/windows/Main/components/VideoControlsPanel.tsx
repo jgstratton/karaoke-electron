@@ -7,12 +7,6 @@ import styles from './VideoControlsPanel.module.css';
 export default function VideoControlsPanel() {
 	const playerState = useSelector((state: RootState) => state.player);
 
-	const sendVideoPosition = (position: number) => {
-		// Temporarily suppress unused parameter warning
-		console.log('sendVideoPosition called with:', position);
-		//todo: implement video position sending
-	}
-
 	// Helper function to format time
 	const formatTime = (seconds: number): string => {
 		if (isNaN(seconds) || !isFinite(seconds)) return '0:00'
