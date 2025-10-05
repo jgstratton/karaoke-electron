@@ -1,46 +1,9 @@
 import { useSelector } from 'react-redux'
-import { RootState } from '../store'
-import { RequestDoc } from '@/types'
+import { selectRotationOrder } from '../store/selectors/queueSelectors'
 import styles from './SongList.module.css';
 
 export default function SongList() {
-	const { currentParty } = useSelector((state: RootState) => state.party)
-
-	// Get all requests from all singers in rotation order
-	const getAllRequestsInRotationOrder = () => {
-		if (!currentParty || !currentParty.singers) {
-			return []
-		}
-
-		const allRequests: (RequestDoc & { singerName: string })[] = []
-
-		// First, prepare sorted request arrays for each singer
-		const singerRequestArrays = currentParty.singers.map(singer => ({
-			name: singer.name,
-			requests: singer.requests
-				? [...singer.requests].sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
-				: []
-		}))
-
-		// Find the maximum number of requests any singer has
-		const maxRequests = Math.max(...singerRequestArrays.map(s => s.requests.length), 0)
-
-		// Round-robin through singers: take 1st request from each, then 2nd from each, etc.
-		for (let requestIndex = 0; requestIndex < maxRequests; requestIndex++) {
-			for (const singerData of singerRequestArrays) {
-				if (requestIndex < singerData.requests.length) {
-					allRequests.push({
-						...singerData.requests[requestIndex],
-						singerName: singerData.name
-					})
-				}
-			}
-		}
-
-		return allRequests
-	}
-
-	const sortedRequests = getAllRequestsInRotationOrder()
+	const sortedRequests = useSelector(selectRotationOrder)
 
 	return (
 		<>

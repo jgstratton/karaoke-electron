@@ -27,6 +27,16 @@ export default function VideoControlsPanel() {
 		}
 	}
 
+	// Handle next button click
+	const handleNextClick = () => {
+		PlayerMediator.Next();
+	}
+
+	// Handle previous button click
+	const handlePreviousClick = () => {
+		PlayerMediator.Previous();
+	}
+
 	return (
 		<>
 			<div className={styles.videoControlsHeader}>
@@ -42,10 +52,16 @@ export default function VideoControlsPanel() {
 						>
 							{playerState.isPlaying ? '⏸️ Pause' : '▶️ Play'}
 						</button>
-						<button className={`${styles.videoControlBtn} ${styles.secondary}`}>
+						<button
+							className={`${styles.videoControlBtn} ${styles.secondary}`}
+							onClick={handlePreviousClick}
+						>
 							⏮️ Previous
 						</button>
-						<button className={`${styles.videoControlBtn} ${styles.secondary}`}>
+						<button
+							className={`${styles.videoControlBtn} ${styles.secondary}`}
+							onClick={handleNextClick}
+						>
 							⏭️ Next
 						</button>
 					</div>

@@ -2,6 +2,7 @@ import PouchDB from 'pouchdb-browser'
 import { store } from '@/windows/main/store'
 import { setCurrentParty } from '@/windows/main/store/slices/partySlice'
 import { PartyDoc, PartiesDoc, RequestDoc } from '@/types'
+import { selectNextQueuedRequest, selectPlayingRequests, selectLastCompletedRequest } from '@/windows/main/store/selectors/queueSelectors'
 
 const db = new PouchDB('karaoke-db')
 
@@ -238,36 +239,8 @@ class RequestMediatorClass {
 			return null
 		}
 
-		// Get all requests from all singers in rotation order
-		const allRequests: (RequestDoc & { singerName: string, singerId: string })[] = []
-
-		// First, prepare sorted request arrays for each singer
-		const singerRequestArrays = currentParty.singers.map(singer => ({
-			id: singer._id,
-			name: singer.name,
-			requests: singer.requests
-				? [...singer.requests].sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
-				: []
-		}))
-
-		// Find the maximum number of requests any singer has
-		const maxRequests = Math.max(...singerRequestArrays.map(s => s.requests.length), 0)
-
-		// Round-robin through singers: take 1st request from each, then 2nd from each, etc.
-		for (let requestIndex = 0; requestIndex < maxRequests; requestIndex++) {
-			for (const singerData of singerRequestArrays) {
-				if (requestIndex < singerData.requests.length) {
-					allRequests.push({
-						...singerData.requests[requestIndex],
-						singerName: singerData.name,
-						singerId: singerData.id
-					})
-				}
-			}
-		}
-
-		// Find the first queued request
-		const nextRequest = allRequests.find(request => request.status === 'queued')
+		// Use selector to get the next queued request
+		const nextRequest = selectNextQueuedRequest(store.getState())
 		if (!nextRequest) {
 			return null // No queued songs available
 		}
@@ -285,6 +258,86 @@ class RequestMediatorClass {
 
 		} catch (error) {
 			console.error('Failed to start next video:', error)
+			return null
+		}
+	}
+
+	async skipToNext(): Promise<RequestDoc | null> {
+		const currentParty = this.getCurrentParty()
+		if (!currentParty || !currentParty.singers) {
+			return null
+		}
+
+		try {
+			// Mark all currently playing requests as completed
+			const playingRequests = selectPlayingRequests(store.getState())
+			for (const playingRequest of playingRequests) {
+				await this.updateRequestStatus(
+					currentParty._id,
+					playingRequest.singerId,
+					playingRequest._id,
+					'completed'
+				)
+			}
+
+			// Find the first queued request (after marking current ones as completed)
+			const nextRequest = selectNextQueuedRequest(store.getState())
+			if (!nextRequest) {
+				return null // No queued songs available
+			}
+
+			// Mark the next request as playing
+			await this.updateRequestStatus(
+				currentParty._id,
+				nextRequest.singerId,
+				nextRequest._id,
+				'playing'
+			)
+
+			return nextRequest
+
+		} catch (error) {
+			console.error('Failed to skip to next video:', error)
+			return null
+		}
+	}
+
+	async skipToPrevious(): Promise<RequestDoc | null> {
+		const currentParty = this.getCurrentParty()
+		if (!currentParty || !currentParty.singers) {
+			return null
+		}
+
+		try {
+			// Mark all currently playing requests as queued
+			const playingRequests = selectPlayingRequests(store.getState())
+			for (const playingRequest of playingRequests) {
+				await this.updateRequestStatus(
+					currentParty._id,
+					playingRequest.singerId,
+					playingRequest._id,
+					'queued'
+				)
+			}
+
+			// Get the last completed song
+			const previousRequest = selectLastCompletedRequest(store.getState())
+			if (!previousRequest) {
+				return null // No completed songs to go back to
+			}
+
+			// Mark the previous request as playing
+			await this.updateRequestStatus(
+				currentParty._id,
+				previousRequest.singerId,
+				previousRequest._id,
+				'playing'
+			)
+
+			return previousRequest
+
+		} catch (error) {
+			console.error('Failed to skip to previous video:', error)
 			return null
 		}
 	}

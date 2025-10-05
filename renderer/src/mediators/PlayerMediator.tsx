@@ -53,6 +53,30 @@ const PlayerMediator = (function(){
 		window.videoPlayer.updateStartingTime(startingTime);
 	}
 
+	const _next = async () => {
+		const { default: RequestMediator } = await import('./RequestMediator');
+		const nextRequest = await RequestMediator.skipToNext();
+		if (nextRequest !== null) {
+			_startNewVideo(nextRequest.mediaFilePath);
+		} else {
+			console.log('No more songs in queue');
+			// Stop current playback
+			_pause();
+		}
+	}
+
+	const _previous = async () => {
+		const { default: RequestMediator } = await import('./RequestMediator');
+		const previousRequest = await RequestMediator.skipToPrevious();
+		if (previousRequest !== null) {
+			_startNewVideo(previousRequest.mediaFilePath);
+		} else {
+			console.log('No completed songs to go back to');
+			// Stop current playback
+			_pause();
+		}
+	}
+
 	return {
 		Pause: _pause,
 		Unpause: _unpause,
@@ -60,7 +84,9 @@ const PlayerMediator = (function(){
 		StartNewVideo: _startNewVideo,
 		UpdateCurrentTime: _updateCurrentTime,
 		UpdateDuration: _updateDuration,
-		SetStartingTime: _updateStartingTime
+		SetStartingTime: _updateStartingTime,
+		Next: _next,
+		Previous: _previous
 	}
 }());
 
