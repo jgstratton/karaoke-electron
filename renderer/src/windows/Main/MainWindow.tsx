@@ -136,6 +136,12 @@ export default function MainWindow() {
 		}
 	}
 
+	const handleRequestDelete = async (singerId: string, requestId: string) => {
+		if (currentParty) {
+			await RequestMediator.deleteRequest(currentParty._id, singerId, requestId)
+		}
+	}
+
 	return (
 		<div className={styles.mainLayout}>
 			<div className={styles.header}>
@@ -225,6 +231,7 @@ export default function MainWindow() {
 				allSingers={currentParty?.singers || []}
 				onSave={handleSingerUpdate}
 				onDelete={handleSingerDelete}
+				onDeleteRequest={handleRequestDelete}
 			/>
 
 			<AddRequestModal

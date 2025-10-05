@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import Modal, { modalStyles } from '../../../components/shared/Modal'
-import { SingerDoc } from '@/types'
+import { SingerDoc, RequestDoc } from '@/types'
 
 interface SingerDetailsModalProps {
 	isOpen: boolean
@@ -9,9 +9,10 @@ interface SingerDetailsModalProps {
 	allSingers: SingerDoc[]
 	onSave: (singerId: string, updatedData: { name?: string; isPaused?: boolean }) => Promise<void>
 	onDelete: (singerId: string) => Promise<void>
+	onDeleteRequest?: (singerId: string, requestId: string) => Promise<void>
 }
 
-export default function SingerDetailsModal({ isOpen, onClose, singer, allSingers, onSave, onDelete }: SingerDetailsModalProps) {
+export default function SingerDetailsModal({ isOpen, onClose, singer, allSingers, onSave, onDelete, onDeleteRequest }: SingerDetailsModalProps) {
 	const [singerName, setSingerName] = useState('')
 	const [isPaused, setIsPaused] = useState(false)
 	const [isSaving, setIsSaving] = useState(false)
@@ -94,6 +95,20 @@ export default function SingerDetailsModal({ isOpen, onClose, singer, allSingers
 		}
 	}
 
+	const handleDeleteRequest = async (requestId: string, songTitle: string) => {
+		if (!singer || !onDeleteRequest) return
+
+		const confirmed = confirm(`Are you sure you want to remove "${songTitle}" from ${singer.name}'s queue?`)
+		if (!confirmed) return
+
+		try {
+			await onDeleteRequest(singer._id, requestId)
+		} catch (err) {
+			console.error('Failed to delete request:', err)
+			alert('Failed to delete song request. Please try again.')
+		}
+	}
+
 	const handleClose = () => {
 		if (!isSaving && !isDeleting) {
 			setSingerName(singer?.name || '')
@@ -142,6 +157,7 @@ export default function SingerDetailsModal({ isOpen, onClose, singer, allSingers
 			isOpen={isOpen}
 			onClose={handleClose}
 			title="Singer Details"
+			size="large"
 			footer={footerButtons}
 		>
 			<form id="singer-details-form" onSubmit={handleSubmit}>
@@ -189,6 +205,61 @@ export default function SingerDetailsModal({ isOpen, onClose, singer, allSingers
 					)}
 				</div>
 			</form>
+
+			{/* Singer's Requests Section */}
+			<div className={modalStyles.section}>
+				<h3 className={modalStyles.sectionTitle}>Song Requests</h3>
+				{singer.requests && singer.requests.length > 0 ? (
+					<div className={modalStyles.requestsList}>
+						{[...singer.requests]
+							.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
+							.map((request, index) => {
+								const getFilename = (path: string): string => {
+									return path.split(/[\\/]/).pop() || path
+								}
+
+								const displayTitle = request.songTitle.includes('/') || request.songTitle.includes('\\')
+									? getFilename(request.songTitle)
+									: request.songTitle || getFilename(request.mediaFilePath)
+
+								const statusText = request.status === 'playing' ? 'Now Playing'
+									: request.status === 'queued' ? 'Queued'
+									: request.status === 'completed' ? 'Completed'
+									: 'Skipped'
+
+								const statusClass = request.status === 'playing' ? modalStyles.statusPlaying
+									: request.status === 'queued' ? modalStyles.statusQueued
+									: request.status === 'completed' ? modalStyles.statusCompleted
+									: modalStyles.statusSkipped
+
+								return (
+									<div key={request._id} className={modalStyles.requestItem}>
+										<div className={modalStyles.requestNumber}>{index + 1}</div>
+										<div className={modalStyles.requestTitle}>{displayTitle}</div>
+										<div className={`${modalStyles.requestStatus} ${statusClass}`}>
+											{statusText}
+										</div>
+										<div className={modalStyles.requestActions}>
+											{request.status === 'queued' && onDeleteRequest && (
+												<button
+													type="button"
+													className={modalStyles.deleteRequestBtn}
+													onClick={() => handleDeleteRequest(request._id, displayTitle)}
+													title="Remove this song from queue"
+												>
+													×
+												</button>
+											)}
+										</div>
+									</div>
+								)
+							})
+						}
+					</div>
+				) : (
+					<p className={modalStyles.helpText}>No song requests yet</p>
+				)}
+			</div>
 		</Modal>
 	)
 }
