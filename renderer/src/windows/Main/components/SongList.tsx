@@ -2,6 +2,11 @@ import { useSelector } from 'react-redux'
 import { selectRotationOrder } from '../store/selectors/queueSelectors'
 import styles from './SongList.module.css';
 
+// Utility function to extract filename from path
+const getFilename = (path: string): string => {
+	return path.split(/[\\/]/).pop() || path
+}
+
 export default function SongList() {
 	const sortedRequests = useSelector(selectRotationOrder)
 
@@ -10,7 +15,6 @@ export default function SongList() {
 			<div className={styles.queueHeader}>
 				<span>#</span>
 				<span>Singer</span>
-				<span>Song</span>
 				<span>Title</span>
 				<span>Status</span>
 				<span></span>
@@ -29,6 +33,11 @@ export default function SongList() {
 							: request.status === 'completed' ? 'Completed'
 							: 'Skipped'
 
+						// Extract filename - use songTitle if it's already a filename, otherwise extract from mediaFilePath
+						const displayTitle = request.songTitle.includes('/') || request.songTitle.includes('\\')
+							? getFilename(request.songTitle)
+							: request.songTitle || getFilename(request.mediaFilePath)
+
 						return (
 							<div
 								key={request._id}
@@ -36,8 +45,7 @@ export default function SongList() {
 							>
 								<span className={styles.queuePosition}>{index + 1}</span>
 								<span className={styles.queueSinger}>{request.singerName}</span>
-								<span></span>
-								<span className={styles.songTitle}>{request.songTitle}</span>
+								<span className={styles.songTitle}>{displayTitle}</span>
 								<span className={styles.songStatus}>{statusText}</span>
 								<span className={styles.showOnHover}>⋯</span>
 							</div>

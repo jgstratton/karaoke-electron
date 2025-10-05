@@ -8,14 +8,16 @@
 	color: #6c757d;
 	border-bottom: 1px solid rgb(75, 75, 75);
 	font-size: 1rem;
-	grid-template-columns: 30px 200px 250px auto 150px 30px;
+	grid-template-columns: 30px 200px auto 150px 30px;
 }
 
 /* Queue List Container */
 .queueList {
-	overflow-y: scroll;
+	overflow-y: auto;
 	scrollbar-width: none;
 	-ms-overflow-style: none;
+	height: 100%;
+	min-height: 0;
 }
 
 .queueList::-webkit-scrollbar {
@@ -27,7 +29,7 @@
 	display: grid;
 	grid-gap: 3px;
 	padding: 6px;
-	grid-template-columns: 30px 200px 250px auto 150px 30px;
+	grid-template-columns: 30px 200px auto 150px 30px;
 	color: white;
 	border-bottom: 1px solid rgb(25, 25, 25);
 	background: none;
@@ -146,7 +148,7 @@
 	.queueHeader {
 		grid-gap: 2px;
 		padding: 5px;
-		grid-template-columns: 25px 200px 250px auto 125px 30px;
+		grid-template-columns: 25px 200px auto 125px 30px;
 		font-size: 12px;
 	}
 

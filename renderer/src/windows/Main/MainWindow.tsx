@@ -131,7 +131,7 @@ export default function MainWindow() {
 		if (currentParty) {
 			const singer = currentParty.singers.find(s => s._id === singerId)
 			if (singer) {
-				await RequestMediator.addRequest(currentParty._id, singerId, singer.name, mediaFilePath, songTitle)
+				await RequestMediator.addRequest(currentParty._id, singerId, mediaFilePath, songTitle)
 			}
 		}
 	}

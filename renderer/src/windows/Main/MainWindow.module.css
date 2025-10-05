@@ -39,6 +39,8 @@
 	grid-template-rows: auto 1fr auto;
 	padding: 0;
 	box-shadow: none;
+	min-height: 0;
+	overflow: hidden;
 }
 
 .videoControlsSection {
@@ -72,6 +74,8 @@
 	display: grid;
 	grid-template-rows: auto 1fr auto;
 	box-shadow: none;
+	min-height: 0;
+	overflow: hidden;
 }
 
 /* Responsive Styles */

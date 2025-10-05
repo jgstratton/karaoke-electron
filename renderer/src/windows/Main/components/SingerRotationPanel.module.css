@@ -13,9 +13,11 @@
 
 /* Singer List Container */
 .singerList {
-	overflow-y: scroll;
+	overflow-y: auto;
 	scrollbar-width: none;
 	-ms-overflow-style: none;
+	height: 100%;
+	min-height: 0;
 }
 
 .singerList::-webkit-scrollbar {

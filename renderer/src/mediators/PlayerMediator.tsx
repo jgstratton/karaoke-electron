@@ -57,6 +57,7 @@ const PlayerMediator = (function(){
 		const { default: RequestMediator } = await import('./RequestMediator');
 		const nextRequest = await RequestMediator.skipToNext();
 		if (nextRequest !== null) {
+			console.log(nextRequest.mediaFilePath);
 			_startNewVideo(nextRequest.mediaFilePath);
 		} else {
 			console.log('No more songs in queue');
