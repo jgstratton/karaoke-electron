@@ -17,6 +17,41 @@ export default function SingerRotationPanel({ onSingerClick, onReorder }: Singer
 	const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
 	const [dragAllowed, setDragAllowed] = useState<boolean>(false)
 
+	// Create a song progress bar for a singer
+	const renderSongProgressBar = (singer: SingerDoc) => {
+		const requests = singer.requests || []
+		if (requests.length === 0) {
+			return (
+				<div className={styles.songProgressBar}>
+					<div className={styles.noSongsText}></div>
+				</div>
+			)
+		}
+
+		// Sort requests by sortOrder
+		const sortedRequests = [...requests].sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
+
+		return (
+			<div className={styles.songProgressBar}>
+				{sortedRequests.map((request) => {
+					let segmentClass = styles.songSegmentQueued
+					if (request.status === 'completed' || request.status === 'skipped') {
+						segmentClass = styles.songSegmentCompleted
+					} else if (request.status === 'playing') {
+						segmentClass = styles.songSegmentPlaying
+					}
+
+					return (
+						<div
+							key={request._id}
+							className={`${styles.songSegment} ${segmentClass}`}
+						/>
+					)
+				})}
+			</div>
+		)
+	}
+
 	const handleDragStart = (e: React.DragEvent, index: number) => {
 		setDraggedIndex(index)
 		e.dataTransfer.effectAllowed = 'move'
@@ -88,7 +123,7 @@ export default function SingerRotationPanel({ onSingerClick, onReorder }: Singer
 			<div className={styles.singerHeader}>
 				<span>#</span>
 				<span>Singer Rotation</span>
-				<span></span>
+				<span>Songs</span>
 				<span></span>
 			</div>
 			<div
@@ -132,7 +167,9 @@ export default function SingerRotationPanel({ onSingerClick, onReorder }: Singer
 								{singer.name}
 								{isPaused && <i className="fas fa-pause-circle" style={{ marginLeft: '8px', fontSize: '0.8rem' }}></i>}
 							</span>
-							<span></span>
+							<span className={styles.progressBarContainer}>
+								{renderSongProgressBar(singer)}
+							</span>
 							<span
 								className={`${styles.showOnHover} ${singers.length > 1 ? styles.dragHandle : ''}`}
 								onMouseDown={() => setDragAllowed(true)}

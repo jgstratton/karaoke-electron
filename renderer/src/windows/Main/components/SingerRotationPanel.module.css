@@ -39,6 +39,54 @@
 	align-items: center;
 }
 
+/* Progress Bar Container */
+.progressBarContainer {
+	display: flex;
+	align-items: center;
+	justify-content: flex-start;
+}
+
+/* Song Progress Bar */
+.songProgressBar {
+	display: flex;
+	align-items: center;
+	height: 8px;
+	border-radius: 2px;
+	overflow: hidden;
+	background-color: rgba(255, 255, 255, 0.1);
+	min-width: 0;
+	flex: 1;
+}
+
+/* No Songs Text */
+.noSongsText {
+	font-size: 0.75rem;
+	color: #6c757d;
+	font-style: italic;
+	padding: 0 4px;
+	line-height: 1;
+}
+
+/* Song Segment */
+.songSegment {
+	width: 5px;
+	height: 100%;
+	flex-shrink: 0;
+}
+
+/* Song Segment States */
+.songSegmentCompleted {
+	background-color: #6c757d; /* Grey for completed */
+}
+
+.songSegmentQueued {
+	background-color: #28a745; /* Green for queued */
+}
+
+.songSegmentPlaying {
+	background-color: #ffc107; /* Yellow for playing */
+}
+
 /* Ensure draggable items don't show grab cursor everywhere */
 .singerItem[draggable="true"] {
 	cursor: pointer;
