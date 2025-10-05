@@ -16,6 +16,17 @@ export default function VideoControlsPanel() {
 		return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
 	}
 
+	// Handle play button click
+	const handlePlayClick = () => {
+		if (playerState.isPlaying) {
+			// If playing, just pause
+			PlayerMediator.Pause();
+		} else {
+			// If paused or no video, unpause (mediator will handle loading next song if needed)
+			PlayerMediator.Unpause();
+		}
+	}
+
 	return (
 		<>
 			<div className={styles.videoControlsHeader}>
@@ -27,9 +38,7 @@ export default function VideoControlsPanel() {
 					<div className={styles.videoControlsRow}>
 						<button
 							className={styles.videoControlBtn}
-							onClick={() => {
-								playerState.isPlaying ? PlayerMediator.Pause() : PlayerMediator.Unpause();
-							}}
+							onClick={handlePlayClick}
 						>
 							{playerState.isPlaying ? '⏸️ Pause' : '▶️ Play'}
 						</button>

@@ -232,6 +232,63 @@ class RequestMediatorClass {
 		}
 	}
 
+	async progressToNextRequest(): Promise<RequestDoc | null> {
+		const currentParty = this.getCurrentParty()
+		if (!currentParty || !currentParty.singers) {
+			return null
+		}
+
+		// Get all requests from all singers in rotation order
+		const allRequests: (RequestDoc & { singerName: string, singerId: string })[] = []
+
+		// First, prepare sorted request arrays for each singer
+		const singerRequestArrays = currentParty.singers.map(singer => ({
+			id: singer._id,
+			name: singer.name,
+			requests: singer.requests
+				? [...singer.requests].sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
+				: []
+		}))
+
+		// Find the maximum number of requests any singer has
+		const maxRequests = Math.max(...singerRequestArrays.map(s => s.requests.length), 0)
+
+		// Round-robin through singers: take 1st request from each, then 2nd from each, etc.
+		for (let requestIndex = 0; requestIndex < maxRequests; requestIndex++) {
+			for (const singerData of singerRequestArrays) {
+				if (requestIndex < singerData.requests.length) {
+					allRequests.push({
+						...singerData.requests[requestIndex],
+						singerName: singerData.name,
+						singerId: singerData.id
+					})
+				}
+			}
+		}
+
+		// Find the first queued request
+		const nextRequest = allRequests.find(request => request.status === 'queued')
+		if (!nextRequest) {
+			return null // No queued songs available
+		}
+
+		try {
+			// Update the request status to 'playing'
+			await this.updateRequestStatus(
+				currentParty._id,
+				nextRequest.singerId,
+				nextRequest._id,
+				'playing'
+			)
+
+			return nextRequest;
+
+		} catch (error) {
+			console.error('Failed to start next video:', error)
+			return null
+		}
+	}
+
 	private getCurrentParty(): PartyDoc | null {
 		return store.getState().party.currentParty
 	}
