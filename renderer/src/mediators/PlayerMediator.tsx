@@ -1,5 +1,6 @@
 import {store} from '../windows/main/store';
 import { pause, play, setVolume, setCurrentVideo, setCurrentTime, setDuration } from '../windows/main/store/slices/playerSlice';
+import RequestMediator from './RequestMediator';
 
 const PlayerMediator = (function(){
 	const _pause = () => {
@@ -20,7 +21,6 @@ const PlayerMediator = (function(){
 
 			// If no video is currently loaded, try to load the next queued request
 			if (!currentState.currentVideo) {
-				const { default: RequestMediator } = await import('./RequestMediator');
 				const nextRequest = await RequestMediator.progressToNextRequest();
 				if (nextRequest !== null) {
 					_startNewVideo(nextRequest.mediaFilePath)
@@ -54,7 +54,6 @@ const PlayerMediator = (function(){
 	}
 
 	const _next = async () => {
-		const { default: RequestMediator } = await import('./RequestMediator');
 		const nextRequest = await RequestMediator.skipToNext();
 		if (nextRequest !== null) {
 			console.log(nextRequest.mediaFilePath);
@@ -67,7 +66,6 @@ const PlayerMediator = (function(){
 	}
 
 	const _previous = async () => {
-		const { default: RequestMediator } = await import('./RequestMediator');
 		const previousRequest = await RequestMediator.skipToPrevious();
 		if (previousRequest !== null) {
 			_startNewVideo(previousRequest.mediaFilePath);

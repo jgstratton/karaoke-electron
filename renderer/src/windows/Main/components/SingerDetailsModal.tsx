@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import Modal, { modalStyles } from '../../../components/shared/Modal'
-import { SingerDoc, RequestDoc } from '@/types'
+import ConfirmDialog from '../../../components/shared/ConfirmDialog'
+import { SingerDoc } from '@/types'
 
 interface SingerDetailsModalProps {
 	isOpen: boolean
@@ -18,6 +19,9 @@ export default function SingerDetailsModal({ isOpen, onClose, singer, allSingers
 	const [isSaving, setIsSaving] = useState(false)
 	const [isDeleting, setIsDeleting] = useState(false)
 	const [nameError, setNameError] = useState('')
+	const [showDeleteSingerConfirm, setShowDeleteSingerConfirm] = useState(false)
+	const [showDeleteRequestConfirm, setShowDeleteRequestConfirm] = useState(false)
+	const [pendingRequestDelete, setPendingRequestDelete] = useState<{ id: string; title: string } | null>(null)
 
 	useEffect(() => {
 		if (singer && isOpen) {
@@ -77,35 +81,44 @@ export default function SingerDetailsModal({ isOpen, onClose, singer, allSingers
 		}
 	}
 
-	const handleDelete = async () => {
+	const handleDelete = () => {
+		setShowDeleteSingerConfirm(true)
+	}
+
+	const handleConfirmDeleteSinger = async () => {
 		if (!singer) return
 
-		const confirmed = confirm(`Are you sure you want to remove "${singer.name}" from the rotation?`)
-		if (!confirmed) return
-
+		setShowDeleteSingerConfirm(false)
 		setIsDeleting(true)
 		try {
 			await onDelete(singer._id)
 			onClose()
 		} catch (err) {
 			console.error('Failed to delete singer:', err)
+			// TODO: Replace with custom error dialog
 			alert('Failed to delete singer. Please try again.')
 		} finally {
 			setIsDeleting(false)
 		}
 	}
 
-	const handleDeleteRequest = async (requestId: string, songTitle: string) => {
-		if (!singer || !onDeleteRequest) return
+	const handleDeleteRequest = (requestId: string, songTitle: string) => {
+		setPendingRequestDelete({ id: requestId, title: songTitle })
+		setShowDeleteRequestConfirm(true)
+	}
 
-		const confirmed = confirm(`Are you sure you want to remove "${songTitle}" from ${singer.name}'s queue?`)
-		if (!confirmed) return
+	const handleConfirmDeleteRequest = async () => {
+		if (!singer || !onDeleteRequest || !pendingRequestDelete) return
 
+		setShowDeleteRequestConfirm(false)
 		try {
-			await onDeleteRequest(singer._id, requestId)
+			await onDeleteRequest(singer._id, pendingRequestDelete.id)
 		} catch (err) {
 			console.error('Failed to delete request:', err)
+			// TODO: Replace with custom error dialog
 			alert('Failed to delete song request. Please try again.')
+		} finally {
+			setPendingRequestDelete(null)
 		}
 	}
 
@@ -153,6 +166,7 @@ export default function SingerDetailsModal({ isOpen, onClose, singer, allSingers
 	const addedDate = new Date(singer.addedDate).toLocaleDateString()
 
 	return (
+		<>
 		<Modal
 			isOpen={isOpen}
 			onClose={handleClose}
@@ -261,5 +275,32 @@ export default function SingerDetailsModal({ isOpen, onClose, singer, allSingers
 				)}
 			</div>
 		</Modal>
+
+		{/* Confirmation Dialogs */}
+		<ConfirmDialog
+			isOpen={showDeleteSingerConfirm}
+			title="Delete Singer"
+			message={`Are you sure you want to remove "${singer?.name}" from the rotation?`}
+			confirmText="Delete Singer"
+			cancelText="Cancel"
+			onConfirm={handleConfirmDeleteSinger}
+			onCancel={() => setShowDeleteSingerConfirm(false)}
+			isDestructive={true}
+		/>
+
+		<ConfirmDialog
+			isOpen={showDeleteRequestConfirm}
+			title="Delete Song Request"
+			message={`Are you sure you want to remove "${pendingRequestDelete?.title}" from ${singer?.name}'s queue?`}
+			confirmText="Delete Song"
+			cancelText="Cancel"
+			onConfirm={handleConfirmDeleteRequest}
+			onCancel={() => {
+				setShowDeleteRequestConfirm(false)
+				setPendingRequestDelete(null)
+			}}
+			isDestructive={true}
+		/>
+	</>
 	)
 }

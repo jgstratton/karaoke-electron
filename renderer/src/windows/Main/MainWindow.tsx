@@ -21,6 +21,7 @@ import PlayerMediator from "../../mediators/PlayerMediator"
 import PartyMediator from "../../mediators/PartyMediator"
 import RequestMediator from "../../mediators/RequestMediator"
 import styles from "./MainWindow.module.css"
+import { play } from "./store/slices/playerSlice"
 
 export default function MainWindow() {
 	const [isSettingsOpen, setIsSettingsOpen] = useState(false)
@@ -33,9 +34,14 @@ export default function MainWindow() {
 	const [isAddSingerModalOpen, setIsAddSingerModalOpen] = useState(false)
 	const [isSingerDetailsModalOpen, setIsSingerDetailsModalOpen] = useState(false)
 	const [isAddRequestModalOpen, setIsAddRequestModalOpen] = useState(false)
-	const [selectedSinger, setSelectedSinger] = useState<SingerDoc | null>(null)
+	const [selectedSingerId, setSelectedSingerId] = useState<string | null>(null)
 	const reduxState = useSelector((state: RootState) => state)
 	const currentParty = useSelector((state: RootState) => state.party.currentParty)
+
+	// Get the current singer from Redux state instead of storing a stale reference
+	const selectedSinger = selectedSingerId && currentParty
+		? currentParty.singers.find(s => s._id === selectedSingerId) || null
+		: null
 
 	useEffect(() => {
 		if (!window.videoPlayer) {
@@ -50,12 +56,21 @@ export default function MainWindow() {
 			PlayerMediator.UpdateDuration(duration);
 		}
 
+		const handleVideoEnded = async () => {
+			PlayerMediator.Pause()
+			await PlayerMediator.Next()
+			PlayerMediator.SetStartingTime(0)
+			PlayerMediator.Unpause()
+		}
+
+		window.videoPlayer.onVideoEnded(handleVideoEnded);
 		window.videoPlayer.onUpdateCurrentTime(handleTimeUpdate);
 		window.videoPlayer.onUpdateDuration(handleDurationUpdate);
 
 		return () => {
 			window.videoPlayer.removeUpdateCurrentTimeListener(handleTimeUpdate);
 			window.videoPlayer.removeUpdateDurationListener(handleDurationUpdate);
+			window.videoPlayer.removeVideoEndedListener(handleVideoEnded);
 		}
 	}, [])
 
@@ -101,7 +116,7 @@ export default function MainWindow() {
 	}
 
 	const handleSingerClick = (singer: SingerDoc) => {
-		setSelectedSinger(singer)
+		setSelectedSingerId(singer._id)
 		setIsSingerDetailsModalOpen(true)
 	}
 
@@ -226,7 +241,10 @@ export default function MainWindow() {
 
 			<SingerDetailsModal
 				isOpen={isSingerDetailsModalOpen}
-				onClose={() => setIsSingerDetailsModalOpen(false)}
+				onClose={() => {
+					setIsSingerDetailsModalOpen(false)
+					setSelectedSingerId(null)
+				}}
 				singer={selectedSinger}
 				allSingers={currentParty?.singers || []}
 				onSave={handleSingerUpdate}

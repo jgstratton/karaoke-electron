@@ -54,6 +54,14 @@ export default function VideoPlayerWindow() {
 
 	}, [])
 
+	const handleVideoEnd = () => {
+		console.log('Video Player Window - Video ended, notifying main window')
+		// Clear the current video in this window
+		setCurrentVideo('')
+		// Notify the main window through IPC to handle progression
+		window.videoPlayer.notifyVideoEnded()
+	}
+
 	return (
 		<div
 			style={{
@@ -70,7 +78,7 @@ export default function VideoPlayerWindow() {
 				<div style={{ width: '100%', height: '100%' }}>
 					<VideoPlayer
 						currentVideo={currentVideo}
-						onVideoEnd={() => setCurrentVideo('')}
+						onVideoEnd={handleVideoEnd}
 						isMainPlayer={true}
 						isPlaying={isPlaying}
 						startingTime={currentTime}

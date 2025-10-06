@@ -3,7 +3,7 @@ import * as path from 'path'
 import * as url from 'url'
 import * as fs from 'fs'
 import type { MediaFile } from './preload-types'
-import { EVENT_PAUSE_VIDEO, EVENT_SET_STARTING_TIME, EVENT_SET_VOLUME, EVENT_UNPAUSE_VIDEO } from './contextBridge/VideoPlayerApi'
+import { EVENT_PAUSE_VIDEO, EVENT_SET_CURRENT_TIME, EVENT_SET_DURATION, EVENT_SET_STARTING_TIME, EVENT_SET_VOLUME, EVENT_UNPAUSE_VIDEO, EVENT_VIDEO_ENDED } from './contextBridge/VideoPlayerApi'
 
 let mainWindow: BrowserWindow | null = null
 let dbExplorerWindow: BrowserWindow | null = null
@@ -311,25 +311,22 @@ const sendPlayerEvents = (eventName:string, ...args: any[]) => {
 	}
 }
 
+const receivePlayerEvents = (eventName:string, ...args: any[]) => {
+	if (mainWindow && !mainWindow.webContents.isDestroyed()) {
+		mainWindow.webContents.send(eventName, ...args)
+	}
+}
+
+// send events from the main window to the player
 ipcMain.on(EVENT_PAUSE_VIDEO, (event) => sendPlayerEvents(EVENT_PAUSE_VIDEO))
 ipcMain.on(EVENT_UNPAUSE_VIDEO, (event) => sendPlayerEvents(EVENT_UNPAUSE_VIDEO))
 ipcMain.on(EVENT_SET_VOLUME, (event, volume) => sendPlayerEvents(EVENT_SET_VOLUME, volume))
 ipcMain.on(EVENT_SET_STARTING_TIME, (event, currentTime: number) => sendPlayerEvents(EVENT_SET_STARTING_TIME, currentTime))
 
-// IPC handlers for time synchronization between video player window and main window
-ipcMain.on('set-current-time', (event, currentTime: number) => {
-	// Send the time update to the main window
-	if (mainWindow && !mainWindow.webContents.isDestroyed()) {
-		mainWindow.webContents.send('set-current-time', currentTime)
-	}
-})
-
-ipcMain.on('set-duration', (event, duration: number) => {
-	// Send the duration update to the main window
-	if (mainWindow && !mainWindow.webContents.isDestroyed()) {
-		mainWindow.webContents.send('set-duration', duration)
-	}
-})
+// send events from the player to the main window
+ipcMain.on(EVENT_VIDEO_ENDED, (event) => receivePlayerEvents(EVENT_VIDEO_ENDED))
+ipcMain.on(EVENT_SET_CURRENT_TIME, (event, currentTime: number) => receivePlayerEvents(EVENT_SET_CURRENT_TIME, currentTime))
+ipcMain.on(EVENT_SET_DURATION, (event, duration: number) => receivePlayerEvents(EVENT_SET_DURATION, duration))
 
 // IPC handler for getting current video state
 ipcMain.handle('get-current-video-state', async (event: Electron.IpcMainInvokeEvent): Promise<any> => {
