@@ -112,6 +112,15 @@ class RequestMediatorClass {
 			// Update the request status
 			request.status = status
 
+			// Handle completion position tracking
+			if (status === 'completed') {
+				// Set completion position when song is completed
+				request.completion_position = this.getNextCompletionPosition(partyId)
+			} else if (status === 'playing' && request.completion_position) {
+				// Clear completion position when loading a previously completed song
+				delete request.completion_position
+			}
+
 			// Save updated parties document
 			await db.put(partiesDoc)
 
@@ -344,6 +353,27 @@ class RequestMediatorClass {
 
 	private getCurrentParty(): PartyDoc | null {
 		return store.getState().party.currentParty
+	}
+
+	private getNextCompletionPosition(partyId: string): number {
+		const currentParty = this.getCurrentParty()
+		if (!currentParty || currentParty._id !== partyId || !currentParty.singers) {
+			return 1
+		}
+
+		// Find all completed requests across all singers and get the highest completion position
+		let maxPosition = 0
+		for (const singer of currentParty.singers) {
+			if (singer.requests) {
+				for (const request of singer.requests) {
+					if (request.status === 'completed' && request.completion_position) {
+						maxPosition = Math.max(maxPosition, request.completion_position)
+					}
+				}
+			}
+		}
+
+		return maxPosition + 1
 	}
 }
 

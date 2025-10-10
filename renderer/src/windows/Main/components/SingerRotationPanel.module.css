@@ -106,15 +106,9 @@
 	box-shadow: none;
 }
 
-/* Current Singer Highlight */
-.singerItem.currentSinger {
-	background-color: rgb(25, 25, 25);
-	border-color: rgb(25, 25, 25);
-	box-shadow: none;
-}
-
-.singerItem.currentSinger::before {
-	display: none;
+/* Current Singer Highlight (Yellow) */
+.singerItem.currentSinger .singerName {
+	color: #ffc107;
 }
 
 /* Paused Singer */

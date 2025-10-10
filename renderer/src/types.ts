@@ -31,6 +31,7 @@ export interface RequestDoc {
 	status: 'queued' | 'playing' | 'completed' | 'skipped'
 	addedDate: string
 	sortOrder: number
+	completion_position?: number
 }
 
 export interface SingerDoc {

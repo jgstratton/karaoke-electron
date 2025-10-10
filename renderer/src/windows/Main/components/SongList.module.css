@@ -52,16 +52,29 @@
 	box-shadow: none;
 }
 
-/* Current Song Highlight */
-.queueItem.currentSong {
-	background-color: rgb(25, 25, 25);
-	border-color: rgb(25, 25, 25);
-	box-shadow: none;
+/* Current Song Highlight (Yellow) */
+.queueItem.currentSong .queuePosition,
+.queueItem.currentSong .queueSinger,
+.queueItem.currentSong .songTitle,
+.queueItem.currentSong .songStatus {
 	color: #ffc107;
 }
 
-.queueItem.currentSong::before {
-	display: none;
+/* Completed Song (Grayed Out) */
+.queueItem.completedSong {
+	opacity: 0.5;
+	color: #6c757d;
+}
+
+.queueItem.completedSong .queuePosition,
+.queueItem.completedSong .queueSinger,
+.queueItem.completedSong .songTitle,
+.queueItem.completedSong .songStatus {
+	color: #6c757d;
+}
+
+.queueItem.completedSong:hover {
+	background-color: rgba(25, 25, 25, 0.5);
 }
 
 /* Queue Position */

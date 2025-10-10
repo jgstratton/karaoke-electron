@@ -143,11 +143,15 @@ export default function SingerRotationPanel({ onSingerClick, onReorder }: Singer
 				)}
 				{singers.map((singer, index) => {
 					const isPaused = singer.isPaused || false
-					const isCurrent = index === 0
 					const isDragging = draggedIndex === index
 					const isDragOver = dragOverIndex === index
+					
+					// Check if singer has playing requests
+					const hasPlayingRequest = singer.requests?.some(request => request.status === 'playing') || false
+					// Check if singer has queued requests
+					const hasQueuedRequests = singer.requests?.some(request => request.status === 'queued') || false
 
-					const singerClasses = `${styles.singerItem} ${isCurrent ? styles.currentSinger : ''} ${isPaused ? styles.pausedSinger : ''} ${isDragging ? styles.dragging : ''} ${isDragOver ? styles.dragOver : ''}`
+					const singerClasses = `${styles.singerItem} ${hasPlayingRequest ? styles.currentSinger : ''} ${hasQueuedRequests && !hasPlayingRequest ? styles.singerWithQueued : ''} ${isPaused ? styles.pausedSinger : ''} ${isDragging ? styles.dragging : ''} ${isDragOver ? styles.dragOver : ''}`
 
 					return (
 						<div

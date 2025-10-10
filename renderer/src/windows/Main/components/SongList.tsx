@@ -27,7 +27,8 @@ export default function SongList() {
 					</div>
 				) : (
 					sortedRequests.map((request, index) => {
-						const isCurrentSong = index === 0 && request.status === 'playing'
+						const isCurrentSong = request.status === 'playing'
+						const isCompleted = request.status === 'completed'
 						const statusText = request.status === 'playing' ? 'Now Playing'
 							: request.status === 'queued' ? 'Queued'
 							: request.status === 'completed' ? 'Completed'
@@ -41,7 +42,7 @@ export default function SongList() {
 						return (
 							<div
 								key={request._id}
-								className={`${styles.queueItem} ${isCurrentSong ? styles.currentSong : ''}`}
+								className={`${styles.queueItem} ${isCurrentSong ? styles.currentSong : ''} ${isCompleted ? styles.completedSong : ''}`}
 							>
 								<span className={styles.queuePosition}>{index + 1}</span>
 								<span className={styles.queueSinger}>{request.singerName}</span>
