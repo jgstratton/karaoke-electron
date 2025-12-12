@@ -1,44 +1,28 @@
 import Modal, { modalStyles } from './Modal'
 
-interface ConfirmDialogProps {
+interface AlertDialogProps {
 	isOpen: boolean
 	title: string
 	message: string
-	confirmText?: string
 	cancelText?: string
-	onConfirm: () => void
 	onCancel: () => void
 	isDestructive?: boolean
-	isProcessing?: boolean
 }
 
-export default function ConfirmDialog({
+export default function AlertDialog({
 	isOpen,
 	title,
 	message,
-	confirmText = 'Confirm',
 	cancelText = 'Cancel',
-	onConfirm,
 	onCancel,
-	isDestructive = false,
-	isProcessing = false
-}: ConfirmDialogProps) {
+	isDestructive = false
+}: AlertDialogProps) {
 	const footerButtons = (
 		<>
 			<button
 				type="button"
-				className={isDestructive ? modalStyles.deleteButton : modalStyles.primaryButton}
-				onClick={onConfirm}
-				autoFocus
-				disabled={isProcessing}
-			>
-				{isProcessing ? 'Processing...' : confirmText}
-			</button>
-			<button
-				type="button"
 				className={modalStyles.secondaryButton}
 				onClick={onCancel}
-				disabled={isProcessing}
 			>
 				{cancelText}
 			</button>

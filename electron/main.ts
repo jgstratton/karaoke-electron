@@ -4,6 +4,7 @@ import * as url from 'url'
 import * as fs from 'fs'
 import type { MediaFile } from './preload-types'
 import { EVENT_PAUSE_VIDEO, EVENT_SET_CURRENT_TIME, EVENT_SET_DURATION, EVENT_SET_STARTING_TIME, EVENT_SET_VOLUME, EVENT_UNPAUSE_VIDEO, EVENT_VIDEO_ENDED } from './contextBridge/VideoPlayerApi'
+import { youTubeService } from './services/YouTubeService'
 
 let mainWindow: BrowserWindow | null = null
 let dbExplorerWindow: BrowserWindow | null = null
@@ -367,6 +368,25 @@ ipcMain.handle('pause-video', async (event: Electron.IpcMainInvokeEvent): Promis
 	return true
 })
 
+// IPC handlers for YouTube
+ipcMain.handle('check-yt-dlp-installed', async () => {
+	return youTubeService.isInstalled()
+})
+
+ipcMain.handle('install-yt-dlp', async () => {
+	try {
+		if (youTubeService.isInstalled()) {
+			return { success: true, message: 'yt-dlp is already installed.' }
+		}
+
+		await youTubeService.installBinary()
+		return { success: true, message: 'yt-dlp installed successfully!' }
+	} catch (error) {
+		console.error('Failed to install yt-dlp:', error)
+		return { success: false, message: `Failed to install yt-dlp: ${error}` }
+	}
+})
+
 ipcMain.handle('unpause-video', async (event: Electron.IpcMainInvokeEvent): Promise<boolean> => {
 	const windows = [mainWindow, videoPlayerWindow].filter((w): w is BrowserWindow =>
 		w !== null && !w.webContents.isDestroyed()
@@ -433,7 +453,14 @@ function createWindow(): void {
 	setupContextMenu(mainWindow)
 }
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
+	// Initialize YouTube Service
+	try {
+		await youTubeService.initialize()
+	} catch (error) {
+		console.error('Failed to initialize YouTube service:', error)
+	}
+
 	// Register a custom protocol to serve local video files
 	protocol.registerFileProtocol('safe-file', (request, callback) => {
 		try {

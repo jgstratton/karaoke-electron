@@ -49,6 +49,12 @@ export interface VideoState {
 	duration?: number
 }
 
+// YouTube API
+export interface YouTubeAPI {
+	checkInstalled: () => Promise<boolean>
+	install: () => Promise<{ success: boolean; message: string }>
+}
+
 // Combined Electron API
 export interface ElectronAPI {
 	env: EnvAPI

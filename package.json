@@ -24,7 +24,8 @@
 		"react": "^18.3.1",
 		"react-dom": "^18.3.1",
 		"react-redux": "^9.2.0",
-		"reselect": "^5.1.1"
+		"reselect": "^5.1.1",
+		"yt-dlp-wrap": "^2.3.12"
 	},
 	"devDependencies": {
 		"@types/node": "^24.2.1",

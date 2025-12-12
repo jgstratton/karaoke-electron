@@ -74,5 +74,6 @@ declare global {
 		videoPlayer: import('../../electron/contextBridge/VideoPlayerApi').IVideoPlayerAPI
 		videoControls: import('../../electron/preload-types').VideoControlsAPI
 		videoState: import('../../electron/preload-types').VideoStateAPI
+		youtube: import('../../electron/preload-types').YouTubeAPI
 	}
 }

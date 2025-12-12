@@ -2,6 +2,9 @@ import { useState } from 'react'
 import { useSelector } from 'react-redux'
 import { RootState } from '../store'
 import styles from './Header.module.css'
+import ConfirmDialog from '../../../components/shared/ConfirmDialog'
+import AlertDialog from '../../../components/shared/AlertDialog'
+import { selectQueuedRequests } from '../store/selectors'
 
 interface HeaderProps {
 	onOpenSettings: () => void
@@ -19,9 +22,51 @@ export default function Header({ onOpenSettings, onViewReduxStore, onOpenDatabas
 	const [showToolsMenu, setShowToolsMenu] = useState(false)
 	const [showPartyMenu, setShowPartyMenu] = useState(false)
 	const { currentParty } = useSelector((state: RootState) => state.party)
+	const queuedRequests = useSelector(selectQueuedRequests)
+
+	// Modal states
+	const [showInstallConfirm, setShowInstallConfirm] = useState(false)
+	const [showInstallAlert, setShowInstallAlert] = useState(false)
+	const [alertMessage, setAlertMessage] = useState('')
+	const [alertTitle, setAlertTitle] = useState('')
+	const [isInstalling, setIsInstalling] = useState(false)
+
+	const handleInstallYtDlp = async () => {
+		setIsInstalling(true)
+		try {
+			const result = await window.youtube.install()
+			setAlertTitle(result.success ? 'Success' : 'Error')
+			setAlertMessage(result.message)
+			setShowInstallAlert(true)
+		} catch (error) {
+			setAlertTitle('Error')
+			setAlertMessage('Failed to install yt-dlp')
+			setShowInstallAlert(true)
+		} finally {
+			setIsInstalling(false)
+			setShowInstallConfirm(false)
+		}
+	}
 
 	return (
 		<>
+			<ConfirmDialog
+				isOpen={showInstallConfirm}
+				onCancel={() => setShowInstallConfirm(false)}
+				onConfirm={handleInstallYtDlp}
+				title="Install yt-dlp"
+				message="Do you want to download and install yt-dlp? This is required for YouTube features."
+				confirmText="Install"
+				isProcessing={isInstalling}
+			/>
+
+			<AlertDialog
+				isOpen={showInstallAlert}
+				onCancel={() => setShowInstallAlert(false)}
+				title={alertTitle}
+				message={alertMessage}
+			/>
+
 			<div className={styles.logo}>
 				<img src="/src/assets/logo.png" alt="Karaoke Logo" className={styles.logoImage} />
 				<div>
@@ -143,12 +188,28 @@ export default function Header({ onOpenSettings, onViewReduxStore, onOpenDatabas
 							>
 								Media Browser
 							</div>
+							<div className={styles.dropdownDivider}></div>
+							<div
+								className={styles.dropdownItem}
+								onClick={async () => {
+									setShowToolsMenu(false)
+									const isInstalled = await window.youtube.checkInstalled()
+									if (isInstalled) {
+										setAlertTitle('Info')
+										setAlertMessage('yt-dlp is already installed.')
+										setShowInstallAlert(true)
+										return
+									}
+
+									setShowInstallConfirm(true)
+								}}
+							>
+								Install yt-dlp
+							</div>
 						</div>
 					)}
 				</div>
-			</div>
-
-			<div className={styles.controls}>
+			</div>			<div className={styles.controls}>
 				{currentParty ? (
 					<>
 						<span>Party: {currentParty.name}</span>
@@ -161,7 +222,7 @@ export default function Header({ onOpenSettings, onViewReduxStore, onOpenDatabas
 				<span>•</span>
 				<span>Singers: {currentParty?.singers?.length || 0}</span>
 				<span>•</span>
-				<span>Queue: {currentParty?.requests?.length || 0} songs</span>
+				<span>Queue: {queuedRequests.length} songs</span>
 			</div>
 		</>
 	)
