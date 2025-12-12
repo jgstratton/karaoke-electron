@@ -30,21 +30,28 @@ export default function Header({ onOpenSettings, onViewReduxStore, onOpenDatabas
 	const [alertMessage, setAlertMessage] = useState('')
 	const [alertTitle, setAlertTitle] = useState('')
 	const [isInstalling, setIsInstalling] = useState(false)
+	const [installType, setInstallType] = useState<'yt-dlp' | 'ffmpeg' | null>(null)
 
-	const handleInstallYtDlp = async () => {
+	const handleInstall = async () => {
+		if (!installType) return
+
 		setIsInstalling(true)
 		try {
-			const result = await window.youtube.install()
+			const result = installType === 'yt-dlp' 
+				? await window.youtube.install()
+				: await window.ffmpeg.install()
+				
 			setAlertTitle(result.success ? 'Success' : 'Error')
 			setAlertMessage(result.message)
 			setShowInstallAlert(true)
 		} catch (error) {
 			setAlertTitle('Error')
-			setAlertMessage('Failed to install yt-dlp')
+			setAlertMessage(`Failed to install ${installType}`)
 			setShowInstallAlert(true)
 		} finally {
 			setIsInstalling(false)
 			setShowInstallConfirm(false)
+			setInstallType(null)
 		}
 	}
 
@@ -52,10 +59,13 @@ export default function Header({ onOpenSettings, onViewReduxStore, onOpenDatabas
 		<>
 			<ConfirmDialog
 				isOpen={showInstallConfirm}
-				onCancel={() => setShowInstallConfirm(false)}
-				onConfirm={handleInstallYtDlp}
-				title="Install yt-dlp"
-				message="Do you want to download and install yt-dlp? This is required for YouTube features."
+				onCancel={() => {
+					setShowInstallConfirm(false)
+					setInstallType(null)
+				}}
+				onConfirm={handleInstall}
+				title={`Install ${installType}`}
+				message={`Do you want to download and install ${installType}? This is required for media features.`}
 				confirmText="Install"
 				isProcessing={isInstalling}
 			/>
@@ -201,10 +211,29 @@ export default function Header({ onOpenSettings, onViewReduxStore, onOpenDatabas
 										return
 									}
 
+									setInstallType('yt-dlp')
 									setShowInstallConfirm(true)
 								}}
 							>
 								Install yt-dlp
+							</div>
+							<div
+								className={styles.dropdownItem}
+								onClick={async () => {
+									setShowToolsMenu(false)
+									const isInstalled = await window.ffmpeg.checkInstalled()
+									if (isInstalled) {
+										setAlertTitle('Info')
+										setAlertMessage('ffmpeg is already installed.')
+										setShowInstallAlert(true)
+										return
+									}
+									
+									setInstallType('ffmpeg')
+									setShowInstallConfirm(true)
+								}}
+							>
+								Install ffmpeg
 							</div>
 						</div>
 					)}

@@ -5,6 +5,7 @@ import type {
 	VideoControlsAPI,
 	VideoStateAPI,
 	YouTubeAPI,
+	FfmpegAPI,
 	MediaFile,
 	VideoState
 } from './preload-types'
@@ -54,6 +55,12 @@ const youtubeAPI: YouTubeAPI = {
 	install: (): Promise<{ success: boolean; message: string }> => ipcRenderer.invoke('install-yt-dlp'),
 }
 
+// Expose FFmpeg API
+const ffmpegAPI: FfmpegAPI = {
+	checkInstalled: (): Promise<boolean> => ipcRenderer.invoke('check-ffmpeg-installed'),
+	install: (): Promise<{ success: boolean; message: string }> => ipcRenderer.invoke('install-ffmpeg'),
+}
+
 // Expose all APIs to the main world
 contextBridge.exposeInMainWorld('env', envAPI)
 contextBridge.exposeInMainWorld('fileSystem', fileSystemAPI)
@@ -61,3 +68,4 @@ contextBridge.exposeInMainWorld('videoPlayer', VideoPlayerAPI)
 contextBridge.exposeInMainWorld('videoControls', videoControlsAPI)
 contextBridge.exposeInMainWorld('videoState', videoStateAPI)
 contextBridge.exposeInMainWorld('youtube', youtubeAPI)
+contextBridge.exposeInMainWorld('ffmpeg', ffmpegAPI)

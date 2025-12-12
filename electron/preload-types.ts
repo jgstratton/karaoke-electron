@@ -55,6 +55,12 @@ export interface YouTubeAPI {
 	install: () => Promise<{ success: boolean; message: string }>
 }
 
+// FFmpeg API
+export interface FfmpegAPI {
+	checkInstalled: () => Promise<boolean>
+	install: () => Promise<{ success: boolean; message: string }>
+}
+
 // Combined Electron API
 export interface ElectronAPI {
 	env: EnvAPI

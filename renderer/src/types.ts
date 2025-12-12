@@ -75,5 +75,6 @@ declare global {
 		videoControls: import('../../electron/preload-types').VideoControlsAPI
 		videoState: import('../../electron/preload-types').VideoStateAPI
 		youtube: import('../../electron/preload-types').YouTubeAPI
+		ffmpeg: import('../../electron/preload-types').FfmpegAPI
 	}
 }

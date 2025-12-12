@@ -5,6 +5,7 @@ import * as fs from 'fs'
 import type { MediaFile } from './preload-types'
 import { EVENT_PAUSE_VIDEO, EVENT_SET_CURRENT_TIME, EVENT_SET_DURATION, EVENT_SET_STARTING_TIME, EVENT_SET_VOLUME, EVENT_UNPAUSE_VIDEO, EVENT_VIDEO_ENDED } from './contextBridge/VideoPlayerApi'
 import { youTubeService } from './services/YouTubeService'
+import { ffmpegService } from './services/FfmpegService'
 
 let mainWindow: BrowserWindow | null = null
 let dbExplorerWindow: BrowserWindow | null = null
@@ -387,6 +388,25 @@ ipcMain.handle('install-yt-dlp', async () => {
 	}
 })
 
+// IPC handlers for FFmpeg
+ipcMain.handle('check-ffmpeg-installed', async () => {
+	return ffmpegService.isInstalled()
+})
+
+ipcMain.handle('install-ffmpeg', async () => {
+	try {
+		if (ffmpegService.isInstalled()) {
+			return { success: true, message: 'ffmpeg is already installed.' }
+		}
+
+		await ffmpegService.installBinary()
+		return { success: true, message: 'ffmpeg installed successfully!' }
+	} catch (error) {
+		console.error('Failed to install ffmpeg:', error)
+		return { success: false, message: `Failed to install ffmpeg: ${error}` }
+	}
+})
+
 ipcMain.handle('unpause-video', async (event: Electron.IpcMainInvokeEvent): Promise<boolean> => {
 	const windows = [mainWindow, videoPlayerWindow].filter((w): w is BrowserWindow =>
 		w !== null && !w.webContents.isDestroyed()
@@ -454,11 +474,12 @@ function createWindow(): void {
 }
 
 app.whenReady().then(async () => {
-	// Initialize YouTube Service
+	// Initialize Services
 	try {
 		await youTubeService.initialize()
+		await ffmpegService.initialize()
 	} catch (error) {
-		console.error('Failed to initialize YouTube service:', error)
+		console.error('Failed to initialize services:', error)
 	}
 
 	// Register a custom protocol to serve local video files
