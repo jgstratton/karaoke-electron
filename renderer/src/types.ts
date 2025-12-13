@@ -56,6 +56,28 @@ export interface PartiesDoc {
 	parties: PartyDoc[]
 }
 
+export interface MediaFileMetadata {
+	videoId: string
+	filePath: string
+	relativePath: string
+	fileName: string
+	artist: string
+	songTitle: string
+	sourceTitle?: string
+	thumbnails?: Record<'0' | '1' | '2' | '3', string>
+	createdAt: string
+	updatedAt: string
+}
+
+export interface MediaMetadataDoc {
+	_id: 'media_metadata'
+	_rev?: string
+	mediaPath?: string
+	files: Record<string, MediaFileMetadata>
+	createdAt: string
+	updatedAt: string
+}
+
 export interface VideoPlayerRef {
 	getVideoState: () => import('../../electron/preload-types').VideoState
 	applyVideoState: (state: Partial<import('../../electron/preload-types').VideoState>) => void

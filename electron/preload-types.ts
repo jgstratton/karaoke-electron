@@ -13,6 +13,10 @@ export interface FileSystemAPI {
 	selectFolder: () => Promise<string | null>
 	validatePath: (path: string) => Promise<boolean>
 	scanMediaFiles: (folderPath: string) => Promise<MediaFile[]>
+	downloadYouTubeThumbnails: (
+		videoId: string,
+		mediaFolderPath: string
+	) => Promise<Record<'0' | '1' | '2' | '3', string>>
 }
 
 // Video Controls API
@@ -49,10 +53,22 @@ export interface VideoState {
 	duration?: number
 }
 
+export interface YouTubeSearchResult {
+	id: string
+	title: string
+	url: string
+	thumbnail?: string
+	duration?: number
+	uploader?: string
+	channel?: string
+}
+
 // YouTube API
 export interface YouTubeAPI {
 	checkInstalled: () => Promise<boolean>
 	install: () => Promise<{ success: boolean; message: string }>
+	search: (query: string) => Promise<YouTubeSearchResult[]>
+	getVideoInfo: (videoId: string) => Promise<{ id: string; title?: string; uploader?: string; channel?: string }>
 }
 
 // FFmpeg API
@@ -78,5 +94,7 @@ declare global {
 		videoPlayer: IVideoPlayerAPI
 		videoControls: VideoControlsAPI
 		videoState: VideoStateAPI
+		youtube: YouTubeAPI
+		ffmpeg: FfmpegAPI
 	}
 }

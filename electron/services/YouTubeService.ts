@@ -36,16 +36,20 @@ export class YouTubeService {
             if (process.platform !== 'win32') {
                 fs.chmodSync(this.binaryPath, '755')
             }
-            
+
             this.ytDlpWrap = new YtDlpWrap(this.binaryPath)
         } catch (error) {
             console.error('Failed to download yt-dlp binary:', error)
             throw error
         }
     }
-    
+
     isInstalled(): boolean {
         return fs.existsSync(this.binaryPath)
+    }
+
+    getBinaryPath(): string {
+        return this.binaryPath
     }
 
     getYtDlpWrap(): YtDlpWrap | null {

@@ -22,6 +22,8 @@ const fileSystemAPI: FileSystemAPI = {
 	selectFolder: (): Promise<string | null> => ipcRenderer.invoke('select-folder'),
 	validatePath: (path: string): Promise<boolean> => ipcRenderer.invoke('validate-path', path),
 	scanMediaFiles: (folderPath: string): Promise<MediaFile[]> => ipcRenderer.invoke('scan-media-files', folderPath),
+	downloadYouTubeThumbnails: (videoId: string, mediaFolderPath: string): Promise<Record<'0' | '1' | '2' | '3', string>> =>
+		ipcRenderer.invoke('download-youtube-thumbnails', videoId, mediaFolderPath),
 }
 
 // Expose video control sync
@@ -53,6 +55,8 @@ const videoStateAPI: VideoStateAPI = {
 const youtubeAPI: YouTubeAPI = {
 	checkInstalled: (): Promise<boolean> => ipcRenderer.invoke('check-yt-dlp-installed'),
 	install: (): Promise<{ success: boolean; message: string }> => ipcRenderer.invoke('install-yt-dlp'),
+	search: (query: string) => ipcRenderer.invoke('youtube-search', query),
+	getVideoInfo: (videoId: string) => ipcRenderer.invoke('youtube-get-video-info', videoId),
 }
 
 // Expose FFmpeg API

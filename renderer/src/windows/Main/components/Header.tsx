@@ -5,6 +5,9 @@ import styles from './Header.module.css'
 import ConfirmDialog from '../../../components/shared/ConfirmDialog'
 import AlertDialog from '../../../components/shared/AlertDialog'
 import { selectQueuedRequests } from '../store/selectors'
+import YouTubeSearchModal from './YouTubeSearchModal'
+import MetadataMediator from '@/mediators/MetadataMediator'
+import ProgressDialog from '@/components/shared/ProgressDialog'
 
 interface HeaderProps {
 	onOpenSettings: () => void
@@ -31,16 +34,22 @@ export default function Header({ onOpenSettings, onViewReduxStore, onOpenDatabas
 	const [alertTitle, setAlertTitle] = useState('')
 	const [isInstalling, setIsInstalling] = useState(false)
 	const [installType, setInstallType] = useState<'yt-dlp' | 'ffmpeg' | null>(null)
+	const [showYouTubeSearch, setShowYouTubeSearch] = useState(false)
+	const [showUpdateMetadataConfirm, setShowUpdateMetadataConfirm] = useState(false)
+	const [isUpdatingMetadata, setIsUpdatingMetadata] = useState(false)
+	const [showUpdateMetadataProgress, setShowUpdateMetadataProgress] = useState(false)
+	const [metadataProgressText, setMetadataProgressText] = useState('')
+	const [metadataAbortController, setMetadataAbortController] = useState<AbortController | null>(null)
 
 	const handleInstall = async () => {
 		if (!installType) return
 
 		setIsInstalling(true)
 		try {
-			const result = installType === 'yt-dlp' 
+			const result = installType === 'yt-dlp'
 				? await window.youtube.install()
 				: await window.ffmpeg.install()
-				
+
 			setAlertTitle(result.success ? 'Success' : 'Error')
 			setAlertMessage(result.message)
 			setShowInstallAlert(true)
@@ -53,6 +62,42 @@ export default function Header({ onOpenSettings, onViewReduxStore, onOpenDatabas
 			setShowInstallConfirm(false)
 			setInstallType(null)
 		}
+	}
+
+	const handleUpdateMetadata = async () => {
+		const controller = new AbortController()
+		setMetadataAbortController(controller)
+		setIsUpdatingMetadata(true)
+		setShowUpdateMetadataProgress(true)
+		setMetadataProgressText('Starting...')
+		try {
+			const summary = await MetadataMediator.updateDatabaseMetadata({
+				signal: controller.signal,
+				onProgress: (p) => {
+					const fileLine = p.videoId ? `${p.fileName} [${p.videoId}]` : p.fileName
+					setMetadataProgressText(`${p.current}/${p.total}\n${fileLine}`)
+				},
+			})
+			setAlertTitle(summary.cancelled ? 'Metadata update cancelled' : 'Metadata updated')
+			setAlertMessage(
+				`Scanned: ${summary.scannedFiles}. Added: ${summary.updated}. Skipped (no id): ${summary.skippedNoId}. Skipped (existing): ${summary.skippedExisting}. Errors: ${summary.errors}.`
+			)
+			setShowInstallAlert(true)
+		} catch (e: any) {
+			setAlertTitle('Error')
+			setAlertMessage(e?.message || 'Failed to update metadata')
+			setShowInstallAlert(true)
+		} finally {
+			setIsUpdatingMetadata(false)
+			setShowUpdateMetadataConfirm(false)
+			setShowUpdateMetadataProgress(false)
+			setMetadataAbortController(null)
+		}
+	}
+
+	const cancelUpdateMetadata = () => {
+		metadataAbortController?.abort()
+		setMetadataProgressText((prev) => (prev ? `${prev}\nCancelling...` : 'Cancelling...'))
 	}
 
 	return (
@@ -70,11 +115,35 @@ export default function Header({ onOpenSettings, onViewReduxStore, onOpenDatabas
 				isProcessing={isInstalling}
 			/>
 
+			<ConfirmDialog
+				isOpen={showUpdateMetadataConfirm}
+				onCancel={() => setShowUpdateMetadataConfirm(false)}
+				onConfirm={handleUpdateMetadata}
+				title="Update Database Metadata"
+				message="This scans your media folder and adds missing artist/title info and 4 YouTube thumbnails for each video id it can detect."
+				confirmText="Update"
+				isProcessing={isUpdatingMetadata}
+			/>
+
+			<ProgressDialog
+				isOpen={showUpdateMetadataProgress}
+				title="Updating Database Metadata"
+				message="Processing media files..."
+				progressText={metadataProgressText}
+				onCancel={cancelUpdateMetadata}
+				isCancellable={!metadataAbortController?.signal.aborted}
+			/>
+
 			<AlertDialog
 				isOpen={showInstallAlert}
 				onCancel={() => setShowInstallAlert(false)}
 				title={alertTitle}
 				message={alertMessage}
+			/>
+
+			<YouTubeSearchModal
+				isOpen={showYouTubeSearch}
+				onClose={() => setShowYouTubeSearch(false)}
 			/>
 
 			<div className={styles.logo}>
@@ -198,6 +267,24 @@ export default function Header({ onOpenSettings, onViewReduxStore, onOpenDatabas
 							>
 								Media Browser
 							</div>
+							<div
+								className={styles.dropdownItem}
+								onClick={() => {
+									setShowToolsMenu(false)
+									setShowYouTubeSearch(true)
+								}}
+							>
+								YouTube Karaoke Search
+							</div>
+							<div
+								className={styles.dropdownItem}
+								onClick={() => {
+									setShowToolsMenu(false)
+									setShowUpdateMetadataConfirm(true)
+								}}
+							>
+								Update Database Metadata
+							</div>
 							<div className={styles.dropdownDivider}></div>
 							<div
 								className={styles.dropdownItem}
@@ -228,7 +315,7 @@ export default function Header({ onOpenSettings, onViewReduxStore, onOpenDatabas
 										setShowInstallAlert(true)
 										return
 									}
-									
+
 									setInstallType('ffmpeg')
 									setShowInstallConfirm(true)
 								}}

@@ -2,10 +2,13 @@ import { app, BrowserWindow, Menu, ipcMain, dialog, protocol } from 'electron'
 import * as path from 'path'
 import * as url from 'url'
 import * as fs from 'fs'
+import { spawn } from 'child_process'
 import type { MediaFile } from './preload-types'
 import { EVENT_PAUSE_VIDEO, EVENT_SET_CURRENT_TIME, EVENT_SET_DURATION, EVENT_SET_STARTING_TIME, EVENT_SET_VOLUME, EVENT_UNPAUSE_VIDEO, EVENT_VIDEO_ENDED } from './contextBridge/VideoPlayerApi'
 import { youTubeService } from './services/YouTubeService'
 import { ffmpegService } from './services/FfmpegService'
+
+type ThumbnailKey = '0' | '1' | '2' | '3'
 
 let mainWindow: BrowserWindow | null = null
 let dbExplorerWindow: BrowserWindow | null = null
@@ -386,6 +389,162 @@ ipcMain.handle('install-yt-dlp', async () => {
 		console.error('Failed to install yt-dlp:', error)
 		return { success: false, message: `Failed to install yt-dlp: ${error}` }
 	}
+})
+
+ipcMain.handle('youtube-search', async (_event: Electron.IpcMainInvokeEvent, query: string) => {
+	if (!youTubeService.isInstalled()) {
+		throw new Error('yt-dlp is not installed. Use Tools -> Install yt-dlp first.')
+	}
+
+	const trimmed = (query || '').trim()
+	if (!trimmed) {
+		return []
+	}
+
+	const searchQuery = `${trimmed} karaoke`
+	const args = [
+		`ytsearch20:${searchQuery}`,
+		'--dump-json',
+		'--skip-download',
+		'--no-warnings',
+		'--no-call-home'
+	]
+
+	const binaryPath = youTubeService.getBinaryPath()
+
+	return await new Promise<any[]>((resolve, reject) => {
+		const child = spawn(binaryPath, args, { windowsHide: true })
+		let stdout = ''
+		let stderr = ''
+
+		child.stdout.on('data', (data) => {
+			stdout += data.toString()
+		})
+		child.stderr.on('data', (data) => {
+			stderr += data.toString()
+		})
+		child.on('error', (err) => reject(err))
+		child.on('close', (code) => {
+			if (code !== 0 && !stdout.trim()) {
+				return reject(new Error(stderr || `yt-dlp exited with code ${code}`))
+			}
+
+			const results: any[] = []
+			for (const line of stdout.split(/\r?\n/)) {
+				const trimmedLine = line.trim()
+				if (!trimmedLine) continue
+				try {
+					const obj = JSON.parse(trimmedLine)
+					const id = obj.id
+					const url = obj.webpage_url || (id ? `https://www.youtube.com/watch?v=${id}` : undefined)
+					results.push({
+						id,
+						title: obj.title,
+						url,
+						thumbnail: obj.thumbnail || obj?.thumbnails?.[0]?.url,
+						duration: obj.duration,
+						uploader: obj.uploader,
+						channel: obj.channel
+					})
+				} catch {
+					// ignore non-JSON lines
+				}
+			}
+
+			resolve(results)
+		})
+	})
+})
+
+ipcMain.handle('youtube-get-video-info', async (_event: Electron.IpcMainInvokeEvent, videoId: string) => {
+	const id = (videoId || '').trim()
+	if (!id) throw new Error('Missing video id')
+	if (!youTubeService.isInstalled()) {
+		return { id }
+	}
+
+	const args = [
+		`https://www.youtube.com/watch?v=${id}`,
+		'--dump-json',
+		'--skip-download',
+		'--no-warnings',
+		'--no-call-home'
+	]
+
+	const binaryPath = youTubeService.getBinaryPath()
+
+	return await new Promise<any>((resolve, reject) => {
+		const child = spawn(binaryPath, args, { windowsHide: true })
+		let stdout = ''
+		let stderr = ''
+		child.stdout.on('data', (data) => {
+			stdout += data.toString()
+		})
+		child.stderr.on('data', (data) => {
+			stderr += data.toString()
+		})
+		child.on('error', (err) => reject(err))
+		child.on('close', (code) => {
+			if (code !== 0 && !stdout.trim()) {
+				return reject(new Error(stderr || `yt-dlp exited with code ${code}`))
+			}
+			try {
+				const obj = JSON.parse(stdout.trim().split(/\r?\n/).filter(Boolean)[0] || '{}')
+				resolve({
+					id,
+					title: obj.title,
+					uploader: obj.uploader,
+					channel: obj.channel
+				})
+			} catch {
+				resolve({ id })
+			}
+		})
+	})
+})
+
+async function safeEnsureInsideBase(baseDir: string, targetPath: string): Promise<string> {
+	const baseResolved = path.resolve(baseDir)
+	const targetResolved = path.resolve(targetPath)
+	if (targetResolved.toLowerCase().startsWith(baseResolved.toLowerCase() + path.sep) || targetResolved.toLowerCase() === baseResolved.toLowerCase()) {
+		return targetResolved
+	}
+	throw new Error('Invalid target path')
+}
+
+async function downloadToFile(downloadUrl: string, destPath: string): Promise<void> {
+	const res = await fetch(downloadUrl)
+	if (!res.ok) {
+		throw new Error(`Failed to download ${downloadUrl} (${res.status})`)
+	}
+	const buf = Buffer.from(await res.arrayBuffer())
+	await fs.promises.writeFile(destPath, buf)
+}
+
+ipcMain.handle('download-youtube-thumbnails', async (_event: Electron.IpcMainInvokeEvent, videoId: string, mediaFolderPath: string): Promise<Record<ThumbnailKey, string>> => {
+	const id = (videoId || '').trim()
+	const mediaFolder = (mediaFolderPath || '').trim()
+	if (!id) throw new Error('Missing video id')
+	if (!mediaFolder) throw new Error('Missing media folder path')
+
+	const stats = await fs.promises.stat(mediaFolder)
+	if (!stats.isDirectory()) throw new Error('Media folder path is not a directory')
+
+	const thumbsDir = await safeEnsureInsideBase(mediaFolder, path.join(mediaFolder, '.karaoke-metadata', 'thumbnails', id))
+	await fs.promises.mkdir(thumbsDir, { recursive: true })
+
+	const keys: ThumbnailKey[] = ['0', '1', '2', '3']
+	const out: Partial<Record<ThumbnailKey, string>> = {}
+
+	for (const k of keys) {
+		const thumbUrl = `https://img.youtube.com/vi/${id}/${k}.jpg`
+		const dest = path.join(thumbsDir, `${k}.jpg`)
+		const safeDest = await safeEnsureInsideBase(mediaFolder, dest)
+		await downloadToFile(thumbUrl, safeDest)
+		out[k] = safeDest
+	}
+
+	return out as Record<ThumbnailKey, string>
 })
 
 // IPC handlers for FFmpeg
