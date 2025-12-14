@@ -120,7 +120,7 @@ const VideoPlayer = ({ currentVideo, onVideoEnd, isPlaying, startingTime, volume
 							zIndex: 10,
 						}}
 					>
-						<p className="hint">No video selected. Use the Media Browser to choose a video.</p>
+						<p className="hint">No video selected. Use Media Search to choose a video.</p>
 					</div>
 				)}
 			</div>

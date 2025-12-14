@@ -100,7 +100,7 @@ export default function VideoPlayerWindow() {
 					No video selected
 					<br />
 					<span style={{ fontSize: '0.5em', marginTop: '1em', display: 'block' }}>
-						Use Media Browser to select a video to play
+						Use Media Search to select a video to play
 					</span>
 				</div>
 			)}

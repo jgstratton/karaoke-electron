@@ -221,6 +221,5 @@ function CustomModal({ isOpen, onClose }) {
 - ✅ **DatabaseExplorerModal** - Uses shared modal styles directly
 - ✅ **ReduxStoreModal** - Uses shared Modal component
 - ✅ **SettingsModal** - Uses shared Modal component with custom styling
-- ✅ **MediaBrowserModal** - Uses shared Modal component with component-specific CSS module
 
 **All modals have been successfully migrated to the shared modal system!**

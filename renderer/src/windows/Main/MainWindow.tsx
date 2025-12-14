@@ -11,7 +11,6 @@ import SongList from "./components/SongList"
 import SettingsModal from "./components/SettingsModal"
 import ReduxStoreModal from "./components/ReduxStoreModal"
 import DatabaseExplorerModal from "./components/DatabaseExplorerModal"
-import MediaBrowserModal from "./components/MediaBrowserModal"
 import PartyModal from "./components/PartyModal"
 import LoadPartyModal from "./components/LoadPartyModal"
 import PartyDetailsModal from "./components/PartyDetailsModal"
@@ -28,7 +27,6 @@ export default function MainWindow() {
 	const [isSettingsOpen, setIsSettingsOpen] = useState(false)
 	const [isReduxStoreOpen, setIsReduxStoreOpen] = useState(false)
 	const [isDatabaseExplorerOpen, setIsDatabaseExplorerOpen] = useState(false)
-	const [isMediaBrowserOpen, setIsMediaBrowserOpen] = useState(false)
 	const [isPartyModalOpen, setIsPartyModalOpen] = useState(false)
 	const [isLoadPartyModalOpen, setIsLoadPartyModalOpen] = useState(false)
 	const [isPartyDetailsModalOpen, setIsPartyDetailsModalOpen] = useState(false)
@@ -169,7 +167,6 @@ export default function MainWindow() {
 					onOpenSettings={() => setIsSettingsOpen(true)}
 					onViewReduxStore={handleViewReduxStore}
 					onOpenDatabaseExplorer={() => setIsDatabaseExplorerOpen(true)}
-					onOpenMediaBrowser={() => setIsMediaBrowserOpen(true)}
 					onCreateParty={handleCreateParty}
 					onLoadParty={handleLoadParty}
 					onEditPartyDetails={handleEditPartyDetails}
@@ -211,11 +208,6 @@ export default function MainWindow() {
 			<DatabaseExplorerModal
 				isOpen={isDatabaseExplorerOpen}
 				onClose={() => setIsDatabaseExplorerOpen(false)}
-			/>
-
-			<MediaBrowserModal
-				isOpen={isMediaBrowserOpen}
-				onClose={() => setIsMediaBrowserOpen(false)}
 			/>
 
 			<PartyModal

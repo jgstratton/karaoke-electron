@@ -14,7 +14,6 @@ type ThumbnailKey = '0' | '1' | '2' | '3'
 
 let mainWindow: BrowserWindow | null = null
 let dbExplorerWindow: BrowserWindow | null = null
-let mediaBrowserWindow: BrowserWindow | null = null
 let videoPlayerWindow: BrowserWindow | null = null
 
 function createMenu(): void {
@@ -113,38 +112,6 @@ function createDbExplorerWindow(): void {
 
 	// Setup context menu for right-click inspect
 	setupContextMenu(dbExplorerWindow)
-}
-
-function createMediaBrowserWindow(): void {
-	mediaBrowserWindow = new BrowserWindow({
-		width: 900,
-		height: 700,
-		webPreferences: {
-			preload: path.join(__dirname, 'preload.js'),
-			contextIsolation: true,
-			nodeIntegration: false,
-			sandbox: false,
-		},
-		parent: mainWindow || undefined,
-		modal: false,
-		title: 'Media Browser',
-	})
-
-	const devServerURL = process.env.VITE_DEV_SERVER_URL
-	if (devServerURL) {
-		mediaBrowserWindow.loadURL(devServerURL + '?view=mediabrowser')
-	} else {
-		const indexHtml =
-			url.pathToFileURL(path.join(__dirname, '..', 'dist', 'index.html')).toString() +
-			'?view=mediabrowser'
-		mediaBrowserWindow.loadURL(indexHtml)
-	}
-
-	mediaBrowserWindow.on('closed', () => {
-		mediaBrowserWindow = null
-	})
-
-	setupContextMenu(mediaBrowserWindow)
 }
 
 function createVideoPlayerWindow(): void {
@@ -295,11 +262,6 @@ ipcMain.on('play-video', (event: Electron.IpcMainEvent, videoPath: string) => {
 	// Also send to video player window if it's open
 	if (videoPlayerWindow) {
 		videoPlayerWindow.webContents.send('play-video', safeUrl)
-	}
-
-	// Close media browser window if it's open
-	if (mediaBrowserWindow) {
-		mediaBrowserWindow.close()
 	}
 
 	// Focus the main window

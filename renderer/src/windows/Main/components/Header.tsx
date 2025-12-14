@@ -13,7 +13,6 @@ interface HeaderProps {
 	onOpenSettings: () => void
 	onViewReduxStore: () => void
 	onOpenDatabaseExplorer: () => void
-	onOpenMediaBrowser: () => void
 	onCreateParty: () => void
 	onLoadParty: () => void
 	onEditPartyDetails: () => void
@@ -21,7 +20,7 @@ interface HeaderProps {
 	onAddRequest: () => void
 }
 
-export default function Header({ onOpenSettings, onViewReduxStore, onOpenDatabaseExplorer, onOpenMediaBrowser, onCreateParty, onLoadParty, onEditPartyDetails, onAddSinger, onAddRequest }: HeaderProps) {
+export default function Header({ onOpenSettings, onViewReduxStore, onOpenDatabaseExplorer, onCreateParty, onLoadParty, onEditPartyDetails, onAddSinger, onAddRequest }: HeaderProps) {
 	const [showToolsMenu, setShowToolsMenu] = useState(false)
 	const [showPartyMenu, setShowPartyMenu] = useState(false)
 	const { currentParty } = useSelector((state: RootState) => state.party)
@@ -261,20 +260,11 @@ export default function Header({ onOpenSettings, onViewReduxStore, onOpenDatabas
 							<div
 								className={styles.dropdownItem}
 								onClick={() => {
-									onOpenMediaBrowser()
-									setShowToolsMenu(false)
-								}}
-							>
-								Media Browser
-							</div>
-							<div
-								className={styles.dropdownItem}
-								onClick={() => {
 									setShowToolsMenu(false)
 									setShowYouTubeSearch(true)
 								}}
 							>
-								YouTube Karaoke Search
+								Media Search
 							</div>
 							<div
 								className={styles.dropdownItem}
