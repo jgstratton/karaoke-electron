@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import Database from '@/database'
+import { useEffect, useMemo, useState } from 'react'
+import PouchDB from 'pouchdb-browser'
 import modalStyles from '../../../components/shared/Modal.module.css'
 import styles from './DatabaseExplorerModal.module.css'
 
@@ -9,28 +9,133 @@ interface DatabaseExplorerModalProps {
 }
 
 export default function DatabaseExplorerModal({ isOpen, onClose }: DatabaseExplorerModalProps) {
+	type DbChoice = 'settings' | 'media'
+
+	const settingsDb = useMemo(() => new PouchDB('karaoke-db'), [])
+	const [mediaPath, setMediaPath] = useState<string>('')
+	const [selectedDb, setSelectedDb] = useState<DbChoice>('settings')
 	const [dbInfo, setDbInfo] = useState<any>(null)
-	const [allDocs, setAllDocs] = useState<any[]>([])
+	const [docRows, setDocRows] = useState<Array<{ id: string; rev?: string }>>([])
+	const [expandedDocId, setExpandedDocId] = useState<string | null>(null)
+	const [expandedDoc, setExpandedDoc] = useState<any>(null)
 	const [loading, setLoading] = useState(true)
+	const [loadingDoc, setLoadingDoc] = useState(false)
+	const [error, setError] = useState<string | null>(null)
 
 	useEffect(() => {
 		if (isOpen) {
-			loadData()
+			initialize()
 		}
 	}, [isOpen])
 
-	const loadData = async () => {
+	useEffect(() => {
+		if (!isOpen) return
+		refresh()
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [isOpen, selectedDb])
+
+	const initialize = async () => {
+		try {
+			setError(null)
+			const doc: any = await settingsDb.get('settings').catch((e: any) => {
+				if (e?.status === 404) return null
+				throw e
+			})
+			const configured = (doc?.mediaPath || '').trim()
+			setMediaPath(configured)
+
+			const canUseMedia = !!configured && !!window.database
+			setSelectedDb(canUseMedia ? 'media' : 'settings')
+		} catch (err: any) {
+			console.error('Failed to initialize database explorer:', err)
+			setMediaPath('')
+			setSelectedDb('settings')
+		}
+	}
+
+	const ensureMediaDbReady = async (): Promise<void> => {
+		const mp = (mediaPath || '').trim()
+		if (!mp) {
+			throw new Error('Media folder is not configured. Go to Tools → Settings first.')
+		}
+		if (!window.database) {
+			throw new Error('Database API is not available.')
+		}
+		await window.database.configureMediaPath(mp)
+	}
+
+	const refresh = async () => {
 		try {
 			setLoading(true)
-			const info = await Database.info()
-			setDbInfo(info)
+			setError(null)
+			setExpandedDocId(null)
+			setExpandedDoc(null)
 
-			const result = await Database.allDocs({ include_docs: true })
-			setAllDocs(result.rows)
-		} catch (err) {
+			if (selectedDb === 'settings') {
+				const info = await settingsDb.info()
+				setDbInfo(info)
+				const result = await settingsDb.allDocs({ include_docs: false })
+				setDocRows(
+					(result.rows || []).map((r: any) => ({
+						id: r.id,
+						rev: r?.value?.rev,
+					}))
+				)
+				return
+			}
+
+			await ensureMediaDbReady()
+			const info = await window.database.info()
+			setDbInfo(info)
+			const result = await window.database.allDocs({ include_docs: false })
+			setDocRows(
+				(result.rows || []).map((r: any) => ({
+					id: r.id,
+					rev: r?.value?.rev,
+				}))
+			)
+		} catch (err: any) {
 			console.error('Failed to load database info:', err)
+			setDbInfo(null)
+			setDocRows([])
+			setError(err?.message || 'Failed to load database info')
 		} finally {
 			setLoading(false)
+		}
+	}
+
+	const toggleDoc = async (docId: string) => {
+		if (expandedDocId === docId) {
+			setExpandedDocId(null)
+			setExpandedDoc(null)
+			return
+		}
+
+		try {
+			setLoadingDoc(true)
+			setError(null)
+			let doc: any
+			if (selectedDb === 'settings') {
+				doc = await settingsDb.get(docId)
+			} else {
+				await ensureMediaDbReady()
+				doc = await window.database.getDoc(docId)
+				if (doc == null) {
+					const e: any = new Error('not_found: missing')
+					e.status = 404
+					e.docId = docId
+					throw e
+				}
+			}
+			setExpandedDocId(docId)
+			setExpandedDoc(doc)
+		} catch (err: any) {
+			console.error('Failed to load document:', err)
+			setExpandedDocId(null)
+			setExpandedDoc(null)
+			setError(err?.message || 'Failed to load document')
+		} finally {
+			setLoadingDoc(false)
 		}
 	}
 
@@ -39,8 +144,13 @@ export default function DatabaseExplorerModal({ isOpen, onClose }: DatabaseExplo
 			if (!rev) {
 				return
 			}
-			await Database.removeDoc(docId, rev)
-			loadData() // Refresh
+			if (selectedDb === 'settings') {
+				await settingsDb.remove(docId, rev)
+			} else {
+				await ensureMediaDbReady()
+				await window.database.removeDoc(docId, rev)
+			}
+			await refresh()
 		} catch (err) {
 			console.error('Failed to delete document:', err)
 		}
@@ -65,18 +175,40 @@ export default function DatabaseExplorerModal({ isOpen, onClose }: DatabaseExplo
 						</div>
 					) : (
 						<>
+							<div className={styles.dbSelectorRow}>
+								<label className={styles.dbSelectorLabel}>
+									Database
+									<select
+										className={styles.dbSelectorSelect}
+										value={selectedDb}
+										onChange={(e) => setSelectedDb(e.target.value as any)}
+									>
+										<option value="settings">Settings (AppData)</option>
+										<option value="media" disabled={!mediaPath || !window.database}>
+											{mediaPath ? 'Media (Configured folder)' : 'Media (Not configured)'}
+										</option>
+									</select>
+								</label>
+
+								<button className={modalStyles.primaryBtn} onClick={refresh}>
+									<i className="fas fa-sync-alt"></i> Refresh
+								</button>
+							</div>
+
+							{error && <p className={modalStyles.noData}>{error}</p>}
+
 							{dbInfo && (
 								<div className={modalStyles.infoSection}>
 									<h3 className={modalStyles.sectionTitle}>Database Information</h3>
 									<div className={styles.dbInfo}>
 										<div className={styles.infoItem}>
-											<strong>Name:</strong> {dbInfo.db_name}
+											<strong>Name:</strong> {dbInfo.db_name || dbInfo.name}
 										</div>
 										<div className={styles.infoItem}>
 											<strong>Documents:</strong> {dbInfo.doc_count}
 										</div>
 										<div className={styles.infoItem}>
-											<strong>Size:</strong> {Math.round(dbInfo.data_size / 1024)}KB
+											<strong>Update Seq:</strong> {dbInfo.update_seq}
 										</div>
 									</div>
 								</div>
@@ -84,37 +216,51 @@ export default function DatabaseExplorerModal({ isOpen, onClose }: DatabaseExplo
 
 							<div>
 								<div className={modalStyles.sectionHeader}>
-									<h3 className={modalStyles.sectionTitle}>All Documents ({allDocs.length})</h3>
-									<button className={modalStyles.primaryBtn} onClick={loadData}>
-										<i className="fas fa-sync-alt"></i> Refresh
-									</button>
+									<h3 className={modalStyles.sectionTitle}>Documents ({docRows.length})</h3>
 								</div>
 
-								{allDocs.length === 0 ? (
+								{docRows.length === 0 ? (
 									<p className={modalStyles.noData}>No documents found.</p>
 								) : (
 									<div className={modalStyles.scrollableList}>
-										{allDocs.map((row, index) => (
-											<div key={row.id} className={modalStyles.listItem}>
-												<div className={modalStyles.listItemHeader}>
+										{docRows.map((row, index) => {
+											const isExpanded = expandedDocId === row.id
+											return (
+												<div key={row.id} className={modalStyles.listItem}>
+												<div
+													className={`${modalStyles.listItemHeader} ${styles.clickableHeader} ${
+														isExpanded ? styles.selectedHeader : ''
+													}`}
+													onClick={() => toggleDoc(row.id)}
+												>
 													<strong className={modalStyles.listItemTitle}>
 														Document {index + 1}: {row.id}
 													</strong>
 													<button
 														className={modalStyles.dangerBtn}
-														onClick={() => deleteDoc(row.id, row.doc?._rev)}
+														onClick={(e) => {
+															e.stopPropagation()
+															deleteDoc(row.id, row.rev)
+														}}
 														title="Delete document"
+														disabled={!row.rev}
 													>
 														<i className="fas fa-trash"></i>
 													</button>
 												</div>
-												<div className={modalStyles.listItemContent}>
-													<pre className={modalStyles.codeBlock}>
-														{JSON.stringify(row.doc, null, 2)}
-													</pre>
-												</div>
+
+												{isExpanded && (
+													<div className={modalStyles.listItemContent}>
+														{loadingDoc ? (
+															<p className={modalStyles.noData}>Loading document...</p>
+														) : (
+															<pre className={modalStyles.codeBlock}>{JSON.stringify(expandedDoc, null, 2)}</pre>
+														)}
+													</div>
+												)}
 											</div>
-										))}
+											)
+										})}
 									</div>
 								)}
 							</div>

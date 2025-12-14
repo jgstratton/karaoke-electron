@@ -16,3 +16,36 @@
 .infoItem strong {
 	color: #f0f6fc;
 }
+
+.dbSelectorRow {
+	display: flex;
+	align-items: flex-end;
+	justify-content: space-between;
+	gap: 12px;
+	margin-bottom: 16px;
+}
+
+.dbSelectorLabel {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	color: #f0f6fc;
+	font-size: 0.9rem;
+}
+
+.dbSelectorSelect {
+	background: #0d1117;
+	color: #f0f6fc;
+	border: 1px solid #21262d;
+	border-radius: 6px;
+	padding: 8px 10px;
+	min-width: 260px;
+}
+
+.clickableHeader {
+	cursor: pointer;
+}
+
+.selectedHeader {
+	outline: 1px solid #58a6ff;
+}
