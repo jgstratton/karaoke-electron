@@ -189,24 +189,56 @@ class MetadataMediatorClass {
 			try {
 				let title = inferTitleFromFileName(file.name, videoId)
 				let fallbackArtist = ''
+				let youtubeUnavailable = false
+				let youtubeCheckedAt: string | undefined
 
 				if (ytInstalled) {
-					try {
-						const info = await window.youtube.getVideoInfo(videoId)
+					const info = await window.youtube.getVideoInfo(videoId).catch(() => null as any)
+					youtubeCheckedAt = new Date().toISOString()
+					if (info?.unavailable) {
+						youtubeUnavailable = true
+					} else {
 						if (info?.title) title = info.title
 						fallbackArtist = info?.channel || info?.uploader || ''
-					} catch {
-						// best-effort
 					}
 				}
 
 				const split = splitArtistAndSong(title, fallbackArtist)
 
-				const thumbnails = await window.fileSystem.downloadYouTubeThumbnails(videoId, mediaPath)
-				const relThumbs = (Object.keys(thumbnails) as ThumbnailKey[]).reduce((acc, k) => {
-					acc[k] = toRelativePathIfPossible(mediaPath, thumbnails[k])
-					return acc
-				}, {} as Record<ThumbnailKey, string>)
+				let relThumbs: Record<ThumbnailKey, string> | undefined
+				let thumbnailSource: 'youtube' | 'ffmpeg' | undefined
+				let thumbsError: any = null
+
+				if (!window.fileSystem?.generateVideoThumbnails) {
+					// Older preload; thumbnails may still come from YouTube.
+				}
+
+				if (!youtubeUnavailable) {
+					try {
+						const thumbnails = await window.fileSystem.downloadYouTubeThumbnails(videoId, mediaPath)
+						relThumbs = (Object.keys(thumbnails) as ThumbnailKey[]).reduce((acc, k) => {
+							acc[k] = toRelativePathIfPossible(mediaPath, thumbnails[k])
+							return acc
+						}, {} as Record<ThumbnailKey, string>)
+						thumbnailSource = 'youtube'
+					} catch (e) {
+						thumbsError = e
+					}
+				}
+
+				if (!relThumbs && window.fileSystem?.generateVideoThumbnails) {
+					try {
+						const thumbnails = await window.fileSystem.generateVideoThumbnails(file.path, mediaPath, videoId)
+						relThumbs = (Object.keys(thumbnails) as ThumbnailKey[]).reduce((acc, k) => {
+							acc[k] = toRelativePathIfPossible(mediaPath, thumbnails[k])
+							return acc
+						}, {} as Record<ThumbnailKey, string>)
+						thumbnailSource = 'ffmpeg'
+						thumbsError = null
+					} catch (e) {
+						thumbsError = thumbsError || e
+					}
+				}
 
 				const now = new Date().toISOString()
 				doc.files[videoId] = {
@@ -218,8 +250,17 @@ class MetadataMediatorClass {
 					songTitle: split.songTitle,
 					sourceTitle: split.sourceTitle,
 					thumbnails: relThumbs,
+					youtubeUnavailable,
+					youtubeCheckedAt,
+					thumbnailSource,
 					createdAt: now,
 					updatedAt: now,
+				}
+				if (thumbsError && youtubeUnavailable) {
+					// We still persist the entry so we don't retry YouTube for unavailable videos.
+					console.warn('Thumbnail generation failed (video marked unavailable):', file, thumbsError)
+				} else if (thumbsError) {
+					throw thumbsError
 				}
 				result.updated++
 				await maybeSave()

@@ -65,6 +65,9 @@ export interface MediaFileMetadata {
 	songTitle: string
 	sourceTitle?: string
 	thumbnails?: Record<'0' | '1' | '2' | '3', string>
+	youtubeUnavailable?: boolean
+	youtubeCheckedAt?: string
+	thumbnailSource?: 'youtube' | 'ffmpeg'
 	createdAt: string
 	updatedAt: string
 }

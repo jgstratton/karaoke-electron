@@ -408,8 +408,7 @@ ipcMain.handle('youtube-search', async (_event: Electron.IpcMainInvokeEvent, que
 		`ytsearch20:${searchQuery}`,
 		'--dump-json',
 		'--skip-download',
-		'--no-warnings',
-		'--no-call-home'
+		'--no-warnings'
 	]
 
 	const binaryPath = youTubeService.getBinaryPath()
@@ -469,8 +468,7 @@ ipcMain.handle('youtube-get-video-info', async (_event: Electron.IpcMainInvokeEv
 		`https://www.youtube.com/watch?v=${id}`,
 		'--dump-json',
 		'--skip-download',
-		'--no-warnings',
-		'--no-call-home'
+		'--no-warnings'
 	]
 
 	const binaryPath = youTubeService.getBinaryPath()
@@ -488,7 +486,12 @@ ipcMain.handle('youtube-get-video-info', async (_event: Electron.IpcMainInvokeEv
 		child.on('error', (err) => reject(err))
 		child.on('close', (code) => {
 			if (code !== 0 && !stdout.trim()) {
-				return reject(new Error(stderr || `yt-dlp exited with code ${code}`))
+				const msg = (stderr || '').trim()
+				if (/video unavailable/i.test(msg)) {
+					return resolve({ id, unavailable: true, error: msg })
+				}
+				// Best-effort: don't fail the IPC call for extractor/network issues.
+				return resolve({ id, error: msg || `yt-dlp exited with code ${code}` })
 			}
 			try {
 				const obj = JSON.parse(stdout.trim().split(/\r?\n/).filter(Boolean)[0] || '{}')
@@ -499,11 +502,100 @@ ipcMain.handle('youtube-get-video-info', async (_event: Electron.IpcMainInvokeEv
 					channel: obj.channel
 				})
 			} catch {
-				resolve({ id })
+				resolve({ id, error: (stderr || '').trim() || undefined })
 			}
 		})
 	})
 })
+
+function parseFfmpegDurationSeconds(stderr: string): number | null {
+	const match = (stderr || '').match(/Duration:\s*(\d+):(\d+):(\d+(?:\.\d+)?)/)
+	if (!match) return null
+	const hours = Number(match[1])
+	const minutes = Number(match[2])
+	const seconds = Number(match[3])
+	if (!Number.isFinite(hours) || !Number.isFinite(minutes) || !Number.isFinite(seconds)) return null
+	return hours * 3600 + minutes * 60 + seconds
+}
+
+async function runFfmpeg(args: string[]): Promise<{ code: number | null; stdout: string; stderr: string }> {
+	return await new Promise((resolve, reject) => {
+		const child = spawn(ffmpegService.getBinaryPath(), args, { windowsHide: true })
+		let stdout = ''
+		let stderr = ''
+		child.stdout.on('data', (d) => (stdout += d.toString()))
+		child.stderr.on('data', (d) => (stderr += d.toString()))
+		child.on('error', reject)
+		child.on('close', (code) => resolve({ code, stdout, stderr }))
+	})
+}
+
+ipcMain.handle(
+	'generate-video-thumbnails',
+	async (_event: Electron.IpcMainInvokeEvent, videoPath: string, mediaFolderPath: string, videoId: string): Promise<Record<ThumbnailKey, string>> => {
+		const inputPath = (videoPath || '').trim()
+		const mediaFolder = (mediaFolderPath || '').trim()
+		const id = (videoId || '').trim()
+		if (!inputPath) throw new Error('Missing video path')
+		if (!mediaFolder) throw new Error('Missing media folder path')
+		if (!id) throw new Error('Missing video id')
+		if (!ffmpegService.isInstalled()) {
+			throw new Error('ffmpeg is not installed. Use Tools -> Install ffmpeg first.')
+		}
+
+		const stats = await fs.promises.stat(mediaFolder)
+		if (!stats.isDirectory()) throw new Error('Media folder path is not a directory')
+
+		const thumbsDir = await safeEnsureInsideBase(mediaFolder, path.join(mediaFolder, '.karaoke-metadata', 'thumbnails', id))
+		await fs.promises.mkdir(thumbsDir, { recursive: true })
+
+		// Determine duration (best-effort) so we can sample a few frames across the video.
+		let durationSec: number | null = null
+		try {
+			const probe = await runFfmpeg(['-hide_banner', '-i', inputPath, '-f', 'null', '-'])
+			durationSec = parseFfmpegDurationSeconds(probe.stderr)
+		} catch {
+			// best-effort
+		}
+
+		const keys: ThumbnailKey[] = ['0', '1', '2', '3']
+		const out: Partial<Record<ThumbnailKey, string>> = {}
+		const safeDuration = durationSec && durationSec > 1 ? durationSec : null
+		const offsets = safeDuration
+			? [0.1, 0.35, 0.6, 0.85].map((p) => Math.max(0, Math.floor(safeDuration * p)))
+			: [1, 5, 15, 30]
+
+		for (let i = 0; i < keys.length; i++) {
+			const k = keys[i]
+			const dest = path.join(thumbsDir, `${k}.jpg`)
+			const safeDest = await safeEnsureInsideBase(mediaFolder, dest)
+			const ss = offsets[i]
+			const args = [
+				'-hide_banner',
+				'-y',
+				'-ss',
+				String(ss),
+				'-i',
+				inputPath,
+				'-frames:v',
+				'1',
+				'-q:v',
+				'3',
+				'-vf',
+				'scale=320:-1',
+				safeDest,
+			]
+
+			const res = await runFfmpeg(args)
+			if (res.code !== 0) {
+				throw new Error(res.stderr || `ffmpeg exited with code ${res.code}`)
+			}
+			out[k] = safeDest
+		}
+
+		return out as Record<ThumbnailKey, string>
+	}
+)
 
 async function safeEnsureInsideBase(baseDir: string, targetPath: string): Promise<string> {
 	const baseResolved = path.resolve(baseDir)
@@ -683,8 +775,12 @@ app.whenReady().then(async () => {
 			const encodedPath = request.url.replace('safe-file://', '')
 			const filePath = decodeURI(encodedPath).replace(/\//g, '\\')
 
-			console.log('Protocol handler - Request URL:', request.url)
-			console.log('Protocol handler - Decoded path:', filePath)
+			// This handler can be extremely chatty (e.g., thumbnails/video frames).
+			// Enable only when debugging protocol issues.
+			if (process.env.DEBUG_SAFE_FILE_PROTOCOL === '1') {
+				console.log('Protocol handler - Request URL:', request.url)
+				console.log('Protocol handler - Decoded path:', filePath)
+			}
 
 			callback({ path: filePath })
 		} catch (error) {

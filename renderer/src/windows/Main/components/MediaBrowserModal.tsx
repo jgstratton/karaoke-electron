@@ -1,8 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import PouchDB from 'pouchdb-browser'
 import Modal, { modalStyles } from '../../../components/shared/Modal'
 import styles from './MediaBrowserModal.module.css'
 import PlayerMediator from '@/mediators/PlayerMediator'
+import Database from '@/database'
+import type { MediaFileMetadata, MediaMetadataDoc } from '@/types'
 
 const db = new PouchDB('karaoke-db')
 
@@ -13,14 +15,20 @@ interface MediaBrowserModalProps {
 
 export default function MediaBrowserModal({ isOpen, onClose }: MediaBrowserModalProps) {
 	const [mediaPath, setMediaPath] = useState('')
-	const [mediaFiles, setMediaFiles] = useState<any[]>([])
-	const [filteredFiles, setFilteredFiles] = useState<any[]>([])
+	const [mediaFiles, setMediaFiles] = useState<MediaFileMetadata[]>([])
+	const [filteredFiles, setFilteredFiles] = useState<MediaFileMetadata[]>([])
 	const [loading, setLoading] = useState(true)
 	const [scanning, setScanning] = useState(false)
 	const [searchTerm, setSearchTerm] = useState('')
-	const [sortBy, setSortBy] = useState('name') // name, size, modified
+	const [sortBy, setSortBy] = useState('name') // name
 	const [sortOrder, setSortOrder] = useState('asc') // asc, desc
 	const [selectedExtensions, setSelectedExtensions] = useState<string[]>([])
+	const [previewTick, setPreviewTick] = useState(0)
+
+	const MAX_RESULTS = 100
+	const METADATA_DOC_ID = 'media_metadata'
+
+	const normalizedMediaPath = useMemo(() => (mediaPath || '').replace(/\/+$/g, '').replace(/\\+$/g, ''), [mediaPath])
 
 	useEffect(() => {
 		if (isOpen) {
@@ -29,8 +37,57 @@ export default function MediaBrowserModal({ isOpen, onClose }: MediaBrowserModal
 	}, [isOpen])
 
 	useEffect(() => {
+		if (!isOpen) return
+		const interval = window.setInterval(() => setPreviewTick((t) => (t + 1) % 1000000), 1500)
+		return () => window.clearInterval(interval)
+	}, [isOpen])
+
+	useEffect(() => {
 		filterAndSortFiles()
 	}, [mediaFiles, searchTerm, sortBy, sortOrder, selectedExtensions])
+
+	const toSafeFileUrl = (absolutePath: string): string => {
+		const encodedPath = encodeURI(absolutePath.replace(/\\/g, '/'))
+		return 'safe-file://' + encodedPath
+	}
+
+	const getExtension = (fileName: string): string => {
+		const name = (fileName || '').trim()
+		const idx = name.lastIndexOf('.')
+		if (idx === -1) return ''
+		return name.slice(idx + 1).toLowerCase()
+	}
+
+	const resolveThumbPath = (thumbPath: string): string | null => {
+		const raw = (thumbPath || '').trim()
+		if (!raw) return null
+		if (/^[a-zA-Z]:[\\/]/.test(raw) || raw.startsWith('\\\\')) {
+			return raw
+		}
+
+		if (!normalizedMediaPath) return null
+		const cleaned = raw.replace(/\//g, '\\').replace(/^\\+/, '')
+		return `${normalizedMediaPath}\\${cleaned}`
+	}
+
+	const getPreviewUrls = (file: MediaFileMetadata): string[] => {
+		const thumbs: Record<string, string> | undefined = file?.thumbnails
+		if (!thumbs) return []
+		const keys = ['0', '1', '2', '3']
+		const urls = keys
+			.map((k) => resolveThumbPath(thumbs[k]))
+			.filter((p): p is string => !!p)
+			.map(toSafeFileUrl)
+		return urls
+	}
+
+	const getDisplayHeading = (file: MediaFileMetadata): string => {
+		const artist = (file?.artist || '').trim()
+		const songTitle = (file?.songTitle || '').trim()
+		if (artist && songTitle) return `${artist} - ${songTitle}`
+		if (songTitle) return songTitle
+		return file.fileName || file.relativePath || file.filePath
+	}
 
 	const loadSettings = async () => {
 		try {
@@ -40,7 +97,7 @@ export default function MediaBrowserModal({ isOpen, onClose }: MediaBrowserModal
 			setMediaPath(path)
 
 			if (path) {
-				await scanFiles(path)
+				await loadMetadata(path)
 			}
 		} catch (err: any) {
 			if (err.status !== 404) {
@@ -51,33 +108,44 @@ export default function MediaBrowserModal({ isOpen, onClose }: MediaBrowserModal
 		}
 	}
 
-	const scanFiles = async (folderPath: string) => {
-		if (!folderPath || !window.fileSystem) {
-			return
-		}
+	const loadMetadata = async (folderPath: string) => {
+		if (!folderPath) return
 
 		setScanning(true)
 		try {
-			const files = await window.fileSystem.scanMediaFiles(folderPath)
+			await Database.ensureDiskDatabase({ mediaPath: folderPath, requireConfigured: true })
+			let md: MediaMetadataDoc | null = null
+			try {
+				md = (await Database.getDoc(METADATA_DOC_ID)) as MediaMetadataDoc
+			} catch (e: any) {
+				if (e?.status !== 404) {
+					console.warn('Failed to load metadata doc:', e)
+				}
+				md = null
+			}
+
+			const files = Object.values(md?.files || {})
 			setMediaFiles(files)
 
-			// Extract unique extensions for filter
-			const extensions = [...new Set(files.map((f: any) => f.extension))].sort()
+			const extensions = [...new Set(files.map((f) => getExtension(f.fileName)).filter(Boolean))].sort()
 			setSelectedExtensions(extensions) // Show all by default
 		} catch (err) {
-			console.error('Failed to scan media files:', err)
-			alert('Failed to scan media files: ' + (err as Error).message)
+			console.error('Failed to load metadata:', err)
+			alert('Failed to load metadata: ' + (err as Error).message)
 		} finally {
 			setScanning(false)
 		}
 	}
 
 	const filterAndSortFiles = () => {
+		const term = (searchTerm || '').toLowerCase()
 		let filtered = mediaFiles.filter(file => {
-			const matchesSearch =
-				file.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-				file.relativePath.toLowerCase().includes(searchTerm.toLowerCase())
-			const matchesExtension = selectedExtensions.includes(file.extension)
+			const heading = getDisplayHeading(file).toLowerCase()
+			const rel = (file.relativePath || '').toLowerCase()
+			const name = (file.fileName || '').toLowerCase()
+			const matchesSearch = !term || heading.includes(term) || rel.includes(term) || name.includes(term)
+			const ext = getExtension(file.fileName)
+			const matchesExtension = selectedExtensions.length === 0 ? true : selectedExtensions.includes(ext)
 			return matchesSearch && matchesExtension
 		})
 
@@ -87,13 +155,7 @@ export default function MediaBrowserModal({ isOpen, onClose }: MediaBrowserModal
 
 			switch (sortBy) {
 				case 'name':
-					comparison = a.name.localeCompare(b.name)
-					break
-				case 'size':
-					comparison = a.size - b.size
-					break
-				case 'modified':
-					comparison = new Date(a.modified).getTime() - new Date(b.modified).getTime()
+					comparison = getDisplayHeading(a).localeCompare(getDisplayHeading(b))
 					break
 				default:
 					comparison = 0
@@ -102,18 +164,7 @@ export default function MediaBrowserModal({ isOpen, onClose }: MediaBrowserModal
 			return sortOrder === 'desc' ? -comparison : comparison
 		})
 
-		setFilteredFiles(filtered)
-	}
-
-	const formatFileSize = (bytes: number) => {
-		const sizes = ['Bytes', 'KB', 'MB', 'GB']
-		if (bytes === 0) return '0 Bytes'
-		const i = Math.floor(Math.log(bytes) / Math.log(1024))
-		return Math.round((bytes / Math.pow(1024, i)) * 100) / 100 + ' ' + sizes[i]
-	}
-
-	const formatDate = (date: string) => {
-		return new Date(date).toLocaleDateString() + ' ' + new Date(date).toLocaleTimeString()
+		setFilteredFiles(filtered.slice(0, MAX_RESULTS))
 	}
 
 	const toggleExtension = (ext: string) => {
@@ -123,10 +174,10 @@ export default function MediaBrowserModal({ isOpen, onClose }: MediaBrowserModal
 	}
 
 	const playVideo = (filePath: string) => {
-		PlayerMediator.StartNewVideo(filePath);
+		PlayerMediator.StartNewVideo(filePath)
 	}
 
-	const allExtensions = [...new Set(mediaFiles.map((f: any) => f.extension))].sort()
+	const allExtensions = [...new Set(mediaFiles.map((f) => getExtension(f.fileName)).filter(Boolean))].sort()
 
 	return (
 		<Modal
@@ -152,15 +203,15 @@ export default function MediaBrowserModal({ isOpen, onClose }: MediaBrowserModal
 					{/* Media path and refresh section */}
 					<div className={styles.mediaPathSection}>
 						<p className={styles.mediaPathInfo}>
-							<strong>Scanning:</strong> {mediaPath}
+							<strong>Media folder:</strong> {mediaPath}
 						</p>
 						<button
 							className={modalStyles.primaryBtn}
-							onClick={() => scanFiles(mediaPath)}
+							onClick={() => loadMetadata(mediaPath)}
 							disabled={scanning}
 						>
 							<i className="fas fa-sync-alt"></i>
-							{scanning ? 'Scanning...' : 'Refresh'}
+							{scanning ? 'Loading...' : 'Refresh'}
 						</button>
 					</div>
 
@@ -182,8 +233,6 @@ export default function MediaBrowserModal({ isOpen, onClose }: MediaBrowserModal
 								className={styles.sortSelect}
 							>
 								<option value="name">Sort by Name</option>
-								<option value="size">Sort by Size</option>
-								<option value="modified">Sort by Date</option>
 							</select>
 
 							<button
@@ -218,6 +267,7 @@ export default function MediaBrowserModal({ isOpen, onClose }: MediaBrowserModal
 					<div className={styles.resultsSummary}>
 						<p>
 							Showing {filteredFiles.length} of {mediaFiles.length} files
+							{mediaFiles.length > MAX_RESULTS && filteredFiles.length >= MAX_RESULTS ? ` (limited to ${MAX_RESULTS})` : ''}
 							{searchTerm && ` matching "${searchTerm}"`}
 						</p>
 					</div>
@@ -226,44 +276,61 @@ export default function MediaBrowserModal({ isOpen, onClose }: MediaBrowserModal
 					<div className={styles.fileListContainer}>
 						{scanning ? (
 							<div className={styles.scanningMessage}>
-								<p>Scanning for video files...</p>
+								<p>Loading metadata...</p>
 							</div>
 						) : filteredFiles.length === 0 ? (
 							<div className={styles.noFilesMessage}>
 								<p>
 									{mediaFiles.length === 0
-										? 'No video files found in the configured folder.'
+										? 'No media metadata found. Run Tools → Update Metadata to populate the library.'
 										: 'No files match your search criteria.'}
 								</p>
 							</div>
 						) : (
 							<div className={styles.fileList}>
-								{filteredFiles.map((file) => (
-									<div key={file.path} className={styles.fileItem}>
-										<div className={styles.fileInfo}>
-											<div className={styles.fileName}>{file.name}</div>
-											<div className={styles.filePath}>{file.relativePath}</div>
-											<div className={styles.fileDetails}>
-												{formatFileSize(file.size)} • Modified: {formatDate(file.modified)}
+								{filteredFiles.map((file, index) => {
+									const heading = getDisplayHeading(file)
+									const previewUrls = getPreviewUrls(file)
+									const previewUrl = previewUrls.length > 0 ? previewUrls[previewTick % previewUrls.length] : null
+									const ext = getExtension(file.fileName)
+									return (
+										<div key={file.videoId} className={styles.fileItem}>
+											<div className={styles.colDetails}>
+												<div className={styles.fileHeading}>{heading}</div>
+												<div className={styles.filePath}>{file.relativePath || file.filePath}</div>
+												<div className={styles.fileDetails}>
+													{ext ? ext.toUpperCase() : 'FILE'} • Updated: {new Date(file.updatedAt).toLocaleString()}
+												</div>
 											</div>
+
+										<div className={styles.colPreview} aria-label="Preview">
+											{previewUrl ? (
+												<img
+													className={styles.previewImage}
+													src={previewUrl}
+													alt={heading}
+													loading={index < 8 ? 'eager' : 'lazy'}
+												/>
+											) : (
+												<div className={styles.previewPlaceholder} />
+											)}
 										</div>
-										<div className={styles.fileActions}>
+
+										<div className={styles.colPlay}>
 											<button
 												className={styles.playBtn}
 												onClick={(e) => {
 													e.stopPropagation()
-													playVideo(file.path)
+													playVideo(file.filePath)
 												}}
 												title="Play video in main window"
 											>
-												<i className="fas fa-play"></i> Play
+												<i className="fas fa-play"></i>
 											</button>
-											<div className={styles.fileExtension}>
-												{file.extension.toUpperCase()}
-											</div>
 										</div>
-									</div>
-								))}
+										</div>
+									)
+								})}
 							</div>
 						)}
 					</div>

@@ -17,6 +17,11 @@ export interface FileSystemAPI {
 		videoId: string,
 		mediaFolderPath: string
 	) => Promise<Record<'0' | '1' | '2' | '3', string>>
+	generateVideoThumbnails: (
+		videoPath: string,
+		mediaFolderPath: string,
+		videoId: string
+	) => Promise<Record<'0' | '1' | '2' | '3', string>>
 }
 
 // Video Controls API
@@ -68,7 +73,7 @@ export interface YouTubeAPI {
 	checkInstalled: () => Promise<boolean>
 	install: () => Promise<{ success: boolean; message: string }>
 	search: (query: string) => Promise<YouTubeSearchResult[]>
-	getVideoInfo: (videoId: string) => Promise<{ id: string; title?: string; uploader?: string; channel?: string }>
+	getVideoInfo: (videoId: string) => Promise<{ id: string; title?: string; uploader?: string; channel?: string; unavailable?: boolean; error?: string }>
 }
 
 // FFmpeg API

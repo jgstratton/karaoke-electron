@@ -25,6 +25,8 @@ const fileSystemAPI: FileSystemAPI = {
 	scanMediaFiles: (folderPath: string): Promise<MediaFile[]> => ipcRenderer.invoke('scan-media-files', folderPath),
 	downloadYouTubeThumbnails: (videoId: string, mediaFolderPath: string): Promise<Record<'0' | '1' | '2' | '3', string>> =>
 		ipcRenderer.invoke('download-youtube-thumbnails', videoId, mediaFolderPath),
+	generateVideoThumbnails: (videoPath: string, mediaFolderPath: string, videoId: string): Promise<Record<'0' | '1' | '2' | '3', string>> =>
+		ipcRenderer.invoke('generate-video-thumbnails', videoPath, mediaFolderPath, videoId),
 }
 
 // Expose video control sync
