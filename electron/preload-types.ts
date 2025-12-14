@@ -77,6 +77,34 @@ export interface FfmpegAPI {
 	install: () => Promise<{ success: boolean; message: string }>
 }
 
+export interface DatabaseInfo {
+	db_name: string
+	doc_count: number
+	update_seq: number
+	sizes: {
+		file: number
+		external: number
+		active: number
+	}
+	instance_start_time?: string
+}
+
+export interface DatabaseAllDocsRow {
+	id: string
+	key: string
+	value: any
+	doc?: any
+}
+
+export interface DatabaseAPI {
+	configureMediaPath: (mediaPath: string) => Promise<void>
+	getDoc: (docId: string) => Promise<any>
+	putDoc: (doc: any) => Promise<any>
+	removeDoc: (docId: string, rev: string) => Promise<void>
+	allDocs: (options?: { include_docs?: boolean }) => Promise<{ rows: DatabaseAllDocsRow[] }>
+	info: () => Promise<DatabaseInfo>
+}
+
 // Combined Electron API
 export interface ElectronAPI {
 	env: EnvAPI
@@ -84,6 +112,7 @@ export interface ElectronAPI {
 	videoPlayer: IVideoPlayerAPI
 	videoControls: VideoControlsAPI
 	videoState: VideoStateAPI
+	database: DatabaseAPI
 }
 
 // Global window interface for preload context
@@ -96,5 +125,6 @@ declare global {
 		videoState: VideoStateAPI
 		youtube: YouTubeAPI
 		ffmpeg: FfmpegAPI
+		database: DatabaseAPI
 	}
 }

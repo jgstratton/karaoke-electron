@@ -3,10 +3,12 @@ import * as path from 'path'
 import * as url from 'url'
 import * as fs from 'fs'
 import { spawn } from 'child_process'
+import type PouchDB from 'pouchdb'
 import type { MediaFile } from './preload-types'
 import { EVENT_PAUSE_VIDEO, EVENT_SET_CURRENT_TIME, EVENT_SET_DURATION, EVENT_SET_STARTING_TIME, EVENT_SET_VOLUME, EVENT_UNPAUSE_VIDEO, EVENT_VIDEO_ENDED } from './contextBridge/VideoPlayerApi'
 import { youTubeService } from './services/YouTubeService'
 import { ffmpegService } from './services/FfmpegService'
+import { databaseService } from './services/DatabaseService'
 
 type ThumbnailKey = '0' | '1' | '2' | '3'
 
@@ -518,7 +520,7 @@ async function downloadToFile(downloadUrl: string, destPath: string): Promise<vo
 		throw new Error(`Failed to download ${downloadUrl} (${res.status})`)
 	}
 	const buf = Buffer.from(await res.arrayBuffer())
-	await fs.promises.writeFile(destPath, buf)
+	await fs.promises.writeFile(destPath, new Uint8Array(buf))
 }
 
 ipcMain.handle('download-youtube-thumbnails', async (_event: Electron.IpcMainInvokeEvent, videoId: string, mediaFolderPath: string): Promise<Record<ThumbnailKey, string>> => {
@@ -545,6 +547,30 @@ ipcMain.handle('download-youtube-thumbnails', async (_event: Electron.IpcMainInv
 	}
 
 	return out as Record<ThumbnailKey, string>
+})
+
+ipcMain.handle('database-configure-media-path', async (_event: Electron.IpcMainInvokeEvent, mediaPath: string): Promise<void> => {
+	await databaseService.configureMediaPath(mediaPath)
+})
+
+ipcMain.handle('database-get-doc', async (_event: Electron.IpcMainInvokeEvent, docId: string) => {
+	return databaseService.getDocOrNull(docId)
+})
+
+ipcMain.handle('database-put-doc', async (_event: Electron.IpcMainInvokeEvent, doc: any) => {
+	return databaseService.putDoc(doc)
+})
+
+ipcMain.handle('database-remove-doc', async (_event: Electron.IpcMainInvokeEvent, docId: string, rev: string) => {
+	return databaseService.removeDoc(docId, rev)
+})
+
+ipcMain.handle('database-all-docs', async (_event: Electron.IpcMainInvokeEvent, options?: PouchDB.Core.AllDocsOptions) => {
+	return databaseService.allDocs(options)
+})
+
+ipcMain.handle('database-info', async (_event: Electron.IpcMainInvokeEvent) => {
+	return databaseService.info()
 })
 
 // IPC handlers for FFmpeg
@@ -602,6 +628,14 @@ function createWindow(): void {
 		},
 	})
 
+	mainWindow.webContents.on('did-fail-load', (_event, errorCode, errorDescription, validatedURL) => {
+		console.error('Main window failed to load:', { errorCode, errorDescription, validatedURL })
+	})
+
+	mainWindow.webContents.on('render-process-gone', (_event, details) => {
+		console.error('Renderer process gone:', details)
+	})
+
 	const devServerURL = process.env.VITE_DEV_SERVER_URL
 	if (devServerURL) {
 		mainWindow.loadURL(devServerURL)
@@ -614,6 +648,7 @@ function createWindow(): void {
 	}
 
 	mainWindow.on('closed', () => {
+		console.log('Main window closed')
 		mainWindow = null
 	})
 
@@ -667,5 +702,6 @@ app.whenReady().then(async () => {
 })
 
 app.on('window-all-closed', () => {
+	console.log('All windows closed; quitting app')
 	if (process.platform !== 'darwin') app.quit()
 })

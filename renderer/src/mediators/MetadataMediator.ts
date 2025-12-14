@@ -1,7 +1,5 @@
-import PouchDB from 'pouchdb-browser'
+import Database from '@/database'
 import type { MediaFile, MediaMetadataDoc } from '@/types'
-
-const db = new PouchDB('karaoke-db')
 
 const METADATA_DOC_ID = 'media_metadata' as const
 
@@ -100,16 +98,10 @@ class MetadataMediatorClass {
 			cancelled: false,
 		}
 
-		let settings: any
-		try {
-			settings = await db.get('settings')
-		} catch (err: any) {
-			if (err?.status === 404) throw new Error('Media folder is not configured. Go to Tools → Settings first.')
-			throw err
-		}
-
+		const settings = await Database.getSettingsDoc()
 		const mediaPath = (settings?.mediaPath || '').trim()
 		if (!mediaPath) throw new Error('Media folder is not configured. Go to Tools → Settings first.')
+		await Database.ensureDiskDatabase({ mediaPath, requireConfigured: true })
 		if (!window.fileSystem) throw new Error('File system API is not available.')
 
 		const mediaFiles: MediaFile[] = await window.fileSystem.scanMediaFiles(mediaPath)
@@ -117,7 +109,7 @@ class MetadataMediatorClass {
 
 		let doc: MediaMetadataDoc
 		try {
-			doc = (await db.get(METADATA_DOC_ID)) as MediaMetadataDoc
+			doc = (await Database.getDoc(METADATA_DOC_ID)) as MediaMetadataDoc
 		} catch (err: any) {
 			if (err?.status === 404) {
 				const now = new Date().toISOString()
@@ -146,12 +138,12 @@ class MetadataMediatorClass {
 			doc.updatedAt = new Date().toISOString()
 			while (true) {
 				try {
-					const saved = await db.put(doc)
+					const saved = await Database.putDoc(doc)
 					doc._rev = saved.rev
 					break
 				} catch (err: any) {
 					if (err.status === 409) {
-						const latest = (await db.get(METADATA_DOC_ID)) as MediaMetadataDoc
+						const latest = (await Database.getDoc(METADATA_DOC_ID)) as MediaMetadataDoc
 						doc = {
 							...latest,
 							files: {

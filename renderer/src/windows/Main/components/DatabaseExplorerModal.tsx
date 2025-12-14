@@ -1,9 +1,7 @@
 import { useEffect, useState } from 'react'
-import PouchDB from 'pouchdb-browser'
+import Database from '@/database'
 import modalStyles from '../../../components/shared/Modal.module.css'
 import styles from './DatabaseExplorerModal.module.css'
-
-const db = new PouchDB('karaoke-db')
 
 interface DatabaseExplorerModalProps {
 	isOpen: boolean
@@ -24,13 +22,11 @@ export default function DatabaseExplorerModal({ isOpen, onClose }: DatabaseExplo
 	const loadData = async () => {
 		try {
 			setLoading(true)
-			const info = await db.info()
+			const info = await Database.info()
 			setDbInfo(info)
 
-			const result = await db.allDocs({ include_docs: true })
+			const result = await Database.allDocs({ include_docs: true })
 			setAllDocs(result.rows)
-
-			console.log('Database name:', db.name)
 		} catch (err) {
 			console.error('Failed to load database info:', err)
 		} finally {
@@ -38,10 +34,12 @@ export default function DatabaseExplorerModal({ isOpen, onClose }: DatabaseExplo
 		}
 	}
 
-	const deleteDoc = async (docId: string) => {
+	const deleteDoc = async (docId: string, rev: string | undefined) => {
 		try {
-			const doc = await db.get(docId)
-			await db.remove(doc)
+			if (!rev) {
+				return
+			}
+			await Database.removeDoc(docId, rev)
 			loadData() // Refresh
 		} catch (err) {
 			console.error('Failed to delete document:', err)
@@ -104,7 +102,7 @@ export default function DatabaseExplorerModal({ isOpen, onClose }: DatabaseExplo
 													</strong>
 													<button
 														className={modalStyles.dangerBtn}
-														onClick={() => deleteDoc(row.id)}
+														onClick={() => deleteDoc(row.id, row.doc?._rev)}
 														title="Delete document"
 													>
 														<i className="fas fa-trash"></i>

@@ -1,24 +1,14 @@
-import PouchDB from 'pouchdb-browser'
+import Database from '@/database'
 import { store } from '@/windows/main/store'
 import { setCurrentParty } from '@/windows/main/store/slices/partySlice'
-import { PartyDoc, PartiesDoc, RequestDoc } from '@/types'
+import { PartyDoc, RequestDoc } from '@/types'
 import { selectNextQueuedRequest, selectPlayingRequests, selectLastCompletedRequest } from '@/windows/main/store/selectors/queueSelectors'
-
-const db = new PouchDB('karaoke-db')
+import { fetchPartiesDoc } from './dbHelpers'
 
 class RequestMediatorClass {
 	async addRequest(partyId: string, singerId: string, mediaFilePath: string, songTitle: string): Promise<void> {
 		try {
-			// Get current parties document
-			let partiesDoc: PartiesDoc
-			try {
-				partiesDoc = await db.get('parties') as PartiesDoc
-			} catch (err: any) {
-				if (err.status === 404) {
-					throw new Error('No parties found')
-				}
-				throw err
-			}
+			const partiesDoc = await fetchPartiesDoc()
 
 			// Find the party
 			const party = partiesDoc.parties.find(p => p._id === partyId)
@@ -56,7 +46,7 @@ class RequestMediatorClass {
 			singer.requests.push(newRequest)
 
 			// Save updated parties document
-			await db.put(partiesDoc)
+			await Database.putDoc(partiesDoc)
 
 			// Update Redux store if this is the current party
 			const currentParty = this.getCurrentParty()
@@ -75,16 +65,7 @@ class RequestMediatorClass {
 
 	async updateRequestStatus(partyId: string, singerId: string, requestId: string, status: RequestDoc['status']): Promise<void> {
 		try {
-			// Get current parties document
-			let partiesDoc: PartiesDoc
-			try {
-				partiesDoc = await db.get('parties') as PartiesDoc
-			} catch (err: any) {
-				if (err.status === 404) {
-					throw new Error('No parties found')
-				}
-				throw err
-			}
+			const partiesDoc = await fetchPartiesDoc()
 
 			// Find the party
 			const party = partiesDoc.parties.find(p => p._id === partyId)
@@ -122,7 +103,7 @@ class RequestMediatorClass {
 			}
 
 			// Save updated parties document
-			await db.put(partiesDoc)
+			await Database.putDoc(partiesDoc)
 
 			// Update Redux store if this is the current party
 			const currentParty = this.getCurrentParty()
@@ -141,16 +122,7 @@ class RequestMediatorClass {
 
 	async deleteRequest(partyId: string, singerId: string, requestId: string): Promise<void> {
 		try {
-			// Get current parties document
-			let partiesDoc: PartiesDoc
-			try {
-				partiesDoc = await db.get('parties') as PartiesDoc
-			} catch (err: any) {
-				if (err.status === 404) {
-					throw new Error('No parties found')
-				}
-				throw err
-			}
+			const partiesDoc = await fetchPartiesDoc()
 
 			// Find the party
 			const party = partiesDoc.parties.find(p => p._id === partyId)
@@ -173,7 +145,7 @@ class RequestMediatorClass {
 			singer.requests = singer.requests.filter(request => request._id !== requestId)
 
 			// Save updated parties document
-			await db.put(partiesDoc)
+			await Database.putDoc(partiesDoc)
 
 			// Update Redux store if this is the current party
 			const currentParty = this.getCurrentParty()
@@ -192,16 +164,7 @@ class RequestMediatorClass {
 
 	async reorderSingerRequests(partyId: string, singerId: string, reorderedRequests: RequestDoc[]): Promise<void> {
 		try {
-			// Get current parties document
-			let partiesDoc: PartiesDoc
-			try {
-				partiesDoc = await db.get('parties') as PartiesDoc
-			} catch (err: any) {
-				if (err.status === 404) {
-					throw new Error('No parties found')
-				}
-				throw err
-			}
+			const partiesDoc = await fetchPartiesDoc()
 
 			// Find the party
 			const party = partiesDoc.parties.find(p => p._id === partyId)
@@ -225,7 +188,7 @@ class RequestMediatorClass {
 			singer.requests = updatedRequests
 
 			// Save updated parties document
-			await db.put(partiesDoc)
+			await Database.putDoc(partiesDoc)
 
 			// Update Redux store if this is the current party
 			const currentParty = this.getCurrentParty()
@@ -375,6 +338,7 @@ class RequestMediatorClass {
 
 		return maxPosition + 1
 	}
+
 }
 
 const RequestMediator = new RequestMediatorClass()

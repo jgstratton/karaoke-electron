@@ -6,6 +6,7 @@ import type {
 	VideoStateAPI,
 	YouTubeAPI,
 	FfmpegAPI,
+	DatabaseAPI,
 	MediaFile,
 	VideoState
 } from './preload-types'
@@ -65,6 +66,15 @@ const ffmpegAPI: FfmpegAPI = {
 	install: (): Promise<{ success: boolean; message: string }> => ipcRenderer.invoke('install-ffmpeg'),
 }
 
+const databaseAPI: DatabaseAPI = {
+	configureMediaPath: (mediaPath: string) => ipcRenderer.invoke('database-configure-media-path', mediaPath),
+	getDoc: (docId: string) => ipcRenderer.invoke('database-get-doc', docId),
+	putDoc: (doc: any) => ipcRenderer.invoke('database-put-doc', doc),
+	removeDoc: (docId: string, rev: string) => ipcRenderer.invoke('database-remove-doc', docId, rev),
+	allDocs: (options?: { include_docs?: boolean }) => ipcRenderer.invoke('database-all-docs', options || {}),
+	info: () => ipcRenderer.invoke('database-info'),
+}
+
 // Expose all APIs to the main world
 contextBridge.exposeInMainWorld('env', envAPI)
 contextBridge.exposeInMainWorld('fileSystem', fileSystemAPI)
@@ -73,3 +83,4 @@ contextBridge.exposeInMainWorld('videoControls', videoControlsAPI)
 contextBridge.exposeInMainWorld('videoState', videoStateAPI)
 contextBridge.exposeInMainWorld('youtube', youtubeAPI)
 contextBridge.exposeInMainWorld('ffmpeg', ffmpegAPI)
+contextBridge.exposeInMainWorld('database', databaseAPI)

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react"
 import { useSelector } from "react-redux"
 import { RootState } from "./store"
 import { PartyDoc, SingerDoc } from "@/types"
+import Database from "@/database"
 import SingerRotationPanel from "./components/SingerRotationPanel"
 import VideoControlsPanel from "./components/VideoControlsPanel"
 import VideoPreview from "./components/VideoPreview"
@@ -72,6 +73,10 @@ export default function MainWindow() {
 			window.videoPlayer.removeUpdateDurationListener(handleDurationUpdate);
 			window.videoPlayer.removeVideoEndedListener(handleVideoEnded);
 		}
+	}, [])
+
+	useEffect(() => {
+		Database.ensureDiskDatabase().catch(() => {})
 	}, [])
 
 	const handleViewReduxStore = () => {

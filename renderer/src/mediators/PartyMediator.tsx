@@ -1,14 +1,13 @@
-import PouchDB from 'pouchdb-browser'
+import Database from '@/database'
 import { store } from '@/windows/main/store'
 import { setCurrentParty } from '@/windows/main/store/slices/partySlice'
-import { PartyDoc, PartiesDoc, SingerDoc } from '@/types'
-
-const db = new PouchDB('karaoke-db')
+import { PartyDoc, SingerDoc } from '@/types'
+import { fetchPartiesDoc } from './dbHelpers'
 
 class PartyMediatorClass {
 	async loadAllParties(): Promise<PartyDoc[]> {
 		try {
-			const partiesDoc = await db.get('parties') as PartiesDoc
+			const partiesDoc = await fetchPartiesDoc({ createIfMissing: true })
 			// Ensure backward compatibility: add singers and requests arrays if they don't exist
 			const parties = partiesDoc.parties.map(party => ({
 				...party,
@@ -19,19 +18,9 @@ class PartyMediatorClass {
 				requests: party.requests || []
 			}))
 			return parties
-		} catch (err: any) {
-			if (err.status === 404) {
-				// Parties document doesn't exist yet, create it
-				const newPartiesDoc: PartiesDoc = {
-					_id: 'parties',
-					parties: []
-				}
-				await db.put(newPartiesDoc)
-				return []
-			} else {
-				console.error('Failed to load parties:', err)
-				throw err
-			}
+		} catch (err) {
+			console.error('Failed to load parties:', err)
+			throw err
 		}
 	}
 
@@ -55,27 +44,9 @@ class PartyMediatorClass {
 		}
 
 		try {
-			// Get current parties document
-			let partiesDoc: PartiesDoc
-			try {
-				partiesDoc = await db.get('parties') as PartiesDoc
-			} catch (err: any) {
-				if (err.status === 404) {
-					partiesDoc = {
-						_id: 'parties',
-						parties: []
-					}
-				} else {
-					throw err
-				}
-			}
-
-			// Add new party to the array
+			const partiesDoc = await fetchPartiesDoc({ createIfMissing: true })
 			partiesDoc.parties.push(newParty)
-
-			// Save updated parties document
-			await db.put(partiesDoc)
-
+			await Database.putDoc(partiesDoc)
 			return newParty
 		} catch (err) {
 			console.error('Failed to create party:', err)
@@ -93,16 +64,7 @@ class PartyMediatorClass {
 
 	async updatePartyName(partyId: string, newName: string): Promise<void> {
 		try {
-			// Get current parties document
-			let partiesDoc: PartiesDoc
-			try {
-				partiesDoc = await db.get('parties') as PartiesDoc
-			} catch (err: any) {
-				if (err.status === 404) {
-					throw new Error('No parties found')
-				}
-				throw err
-			}
+			const partiesDoc = await fetchPartiesDoc()
 
 			// Find and update the party
 			const party = partiesDoc.parties.find(p => p._id === partyId)
@@ -113,7 +75,7 @@ class PartyMediatorClass {
 			party.name = newName
 
 			// Save updated parties document
-			await db.put(partiesDoc)
+			await Database.putDoc(partiesDoc)
 
 			// Update Redux store if this is the current party
 			const currentParty = this.getCurrentParty()
@@ -128,21 +90,13 @@ class PartyMediatorClass {
 
 	async deleteParty(partyId: string): Promise<void> {
 		try {
-			let partiesDoc: PartiesDoc
-			try {
-				partiesDoc = await db.get('parties') as PartiesDoc
-			} catch (err: any) {
-				if (err.status === 404) {
-					return // No parties to delete
-				}
-				throw err
-			}
+			const partiesDoc = await fetchPartiesDoc()
 
 			// Remove party from the array
 			partiesDoc.parties = partiesDoc.parties.filter(party => party._id !== partyId)
 
 			// Save updated parties document
-			await db.put(partiesDoc)
+			await Database.putDoc(partiesDoc)
 
 			// Clear current party if it was deleted
 			const currentParty = this.getCurrentParty()
@@ -157,16 +111,7 @@ class PartyMediatorClass {
 
 	async addSingerToParty(partyId: string, singerName: string): Promise<void> {
 		try {
-			// Get current parties document
-			let partiesDoc: PartiesDoc
-			try {
-				partiesDoc = await db.get('parties') as PartiesDoc
-			} catch (err: any) {
-				if (err.status === 404) {
-					throw new Error('No parties found')
-				}
-				throw err
-			}
+			const partiesDoc = await fetchPartiesDoc()
 
 			// Find the party
 			const party = partiesDoc.parties.find(p => p._id === partyId)
@@ -190,7 +135,7 @@ class PartyMediatorClass {
 			party.singers.push(newSinger)
 
 			// Save updated parties document
-			await db.put(partiesDoc)
+			await Database.putDoc(partiesDoc)
 
 			// Update Redux store if this is the current party
 			const currentParty = this.getCurrentParty()
@@ -205,16 +150,7 @@ class PartyMediatorClass {
 
 	async updateSinger(partyId: string, singerId: string, updatedData: { name?: string; isPaused?: boolean }): Promise<void> {
 		try {
-			// Get current parties document
-			let partiesDoc: PartiesDoc
-			try {
-				partiesDoc = await db.get('parties') as PartiesDoc
-			} catch (err: any) {
-				if (err.status === 404) {
-					throw new Error('No parties found')
-				}
-				throw err
-			}
+			const partiesDoc = await fetchPartiesDoc()
 
 			// Find the party
 			const party = partiesDoc.parties.find(p => p._id === partyId)
@@ -242,7 +178,7 @@ class PartyMediatorClass {
 			}
 
 			// Save updated parties document
-			await db.put(partiesDoc)
+			await Database.putDoc(partiesDoc)
 
 			// Update Redux store if this is the current party
 			const currentParty = this.getCurrentParty()
@@ -257,16 +193,7 @@ class PartyMediatorClass {
 
 	async deleteSinger(partyId: string, singerId: string): Promise<void> {
 		try {
-			// Get current parties document
-			let partiesDoc: PartiesDoc
-			try {
-				partiesDoc = await db.get('parties') as PartiesDoc
-			} catch (err: any) {
-				if (err.status === 404) {
-					throw new Error('No parties found')
-				}
-				throw err
-			}
+			const partiesDoc = await fetchPartiesDoc()
 
 			// Find the party
 			const party = partiesDoc.parties.find(p => p._id === partyId)
@@ -283,7 +210,7 @@ class PartyMediatorClass {
 			party.singers = party.singers.filter(singer => singer._id !== singerId)
 
 			// Save updated parties document
-			await db.put(partiesDoc)
+			await Database.putDoc(partiesDoc)
 
 			// Update Redux store if this is the current party
 			const currentParty = this.getCurrentParty()
@@ -298,16 +225,7 @@ class PartyMediatorClass {
 
 	async reorderSingers(partyId: string, reorderedSingers: SingerDoc[]): Promise<void> {
 		try {
-			// Get current parties document
-			let partiesDoc: PartiesDoc
-			try {
-				partiesDoc = await db.get('parties') as PartiesDoc
-			} catch (err: any) {
-				if (err.status === 404) {
-					throw new Error('No parties found')
-				}
-				throw err
-			}
+			const partiesDoc = await fetchPartiesDoc()
 
 			// Find the party
 			const party = partiesDoc.parties.find(p => p._id === partyId)
@@ -319,7 +237,7 @@ class PartyMediatorClass {
 			party.singers = reorderedSingers
 
 			// Save updated parties document
-			await db.put(partiesDoc)
+			await Database.putDoc(partiesDoc)
 
 			// Update Redux store if this is the current party
 			const currentParty = this.getCurrentParty()
